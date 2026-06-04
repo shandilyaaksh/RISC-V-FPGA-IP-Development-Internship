@@ -108,7 +108,7 @@ Output:
 ```text
 Sum from 1 to 5 is 15
 ```
-Figure 3: Creation and Execution of C Program
+### Figure 3: Creation and Execution of C Program
 
 ![C Program Execution](Screenshots/3.png)
 ---
@@ -199,7 +199,7 @@ Command:
 ```bash
 riscv64-unknown-elf-gcc -Ofast -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
 ```
-### Figure 9: Main Function Assembly Analysis for -Ofast
+### Figure 9: RISC-V Compilation with Different Optimization Levels
 
 ![Main Function Assembly](Screenshots/10.png)
 ---
@@ -242,8 +242,10 @@ The experiment successfully demonstrated the complete flow of C program compilat
 
 ## Author
 
-Name: **Amritanshu Kumar Shandilya**
-GitHub username: **shandilyaaksh**
-College name: The LNMIIT Jaipur
+**Name:** Amritanshu Kumar Shandilya
+
+**GitHub Username:** shandilyaaksh
+
+**College Name:** The LNM Institute of Information Technology (LNMIIT), Jaipur
 
 
