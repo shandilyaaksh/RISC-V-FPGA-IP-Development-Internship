@@ -47,9 +47,9 @@ O0 = O1
 This ensures that the implementation matches the expected behavior defined by the specification model.
 
 
-### Figure 1: Chip Modelling Verification Flow
-
 ![Chip Modelling Flow](Screenshots/1.png)
+
+### Figure 1: Chip Modelling Verification Flow
 ---
 
 ## Program Used
