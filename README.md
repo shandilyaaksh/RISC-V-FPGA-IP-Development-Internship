@@ -170,7 +170,7 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o
 
 The generated assembly instructions were analyzed.
 
-Figure 8: Generated Binary Verification
+### Figure 6: Generated Binary Verification
 
 ![Generated Binary](Screenshots/8.png)
 ---
@@ -185,7 +185,7 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 This enabled easier navigation through the generated assembly code.
 
-### Figure 10: Main Function Assembly Analysis for -O1
+### Figure 7: Main Function Assembly Analysis for -O1
 
 ![Main Function Assembly](Screenshots/9.png)
 ---
@@ -199,7 +199,7 @@ Command:
 ```bash
 riscv64-unknown-elf-gcc -Ofast -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
 ```
-### Figure 9: RISC-V Compilation with Different Optimization Levels
+### Figure 8: RISC-V Compilation with Different Optimization Levels
 
 ![Main Function Assembly](Screenshots/10.png)
 ---
@@ -214,7 +214,7 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 The optimized assembly code was analyzed and compared with the previous output.
 
-### Figure 11: -Ofast Optimization Analysis
+### Figure 9: -Ofast Optimization Analysis
 
 ![Ofast Optimization](Screenshots/11.png)
 ---
