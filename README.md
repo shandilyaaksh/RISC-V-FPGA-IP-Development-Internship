@@ -219,8 +219,8 @@ The experiment successfully demonstrated the complete flow of C program compilat
 
 ## Author
 
-**Amritanshu Kumar Shandilya**
-
-GitHub Username: **shandilyaaksh**
+Name: **Amritanshu Kumar Shandilya**
+GitHub username: **shandilyaaksh**
+College name: The LNMIIT Jaipur
 
 
