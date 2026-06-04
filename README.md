@@ -2,7 +2,6 @@
 
 > Documentation and lab work completed as part of the **VSD FPGA Internship Screening Program**, covering RISC-V toolchain setup, compilation flow, object dump analysis, and learning outcomes.
 
-![Task Status](https://img.shields.io/badge/Task%201-Completed-success)
 ![RISC--V](https://img.shields.io/badge/Architecture-RISC--V-blue)
 ![VSD Internship](https://img.shields.io/badge/VSD-Internship-orange)
 
@@ -10,7 +9,7 @@
 
 ## Task List
 
-### ✅ Task 1 - RISC-V Toolchain Setup and Compilation Flow
+### Task 1 - RISC-V Toolchain Setup and Compilation Flow
 
 * Creation of GitHub repository
 * Development of a C program
@@ -20,7 +19,7 @@
 * RISC-V object dump generation
 * Assembly code analysis
 
-### ⏳ Task 2
+### Task 2
 
 (To be added)
 
@@ -292,10 +291,9 @@ The experiment successfully demonstrated the complete flow of C program compilat
 
 ## Author
 
-| Details | Information |
-|----------|-------------|
-| Name | Amritanshu Kumar Shandilya |
-| GitHub Username | shandilyaaksh |
-| College | The LNM Institute of Information Technology (LNMIIT), Jaipur |
+**Name:** Amritanshu Kumar Shandilya
 
+**GitHub Username:** shandilyaaksh
+
+**College Name:** The LNM Institute of Information Technology (LNMIIT), Jaipur
 ---
