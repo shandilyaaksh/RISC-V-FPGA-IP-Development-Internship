@@ -46,10 +46,9 @@ O0 = O1
 
 This ensures that the implementation matches the expected behavior defined by the specification model.
 
+### Figure 1: Chip Modelling Verification Flow
 
 ![Chip Modelling Flow](Screenshots/1.png)
-
-### Figure 1: Chip Modelling Verification Flow
 ---
 
 ## Program Used
@@ -83,7 +82,9 @@ Command:
 ```bash
 leafpad sum_1_to_n.c
 ```
+### Figure 2: Installation and Launch of Leafpad
 
+![Leafpad Installation](Screenshots/2.png)
 ---
 
 ## Step 2: Native GCC Compilation
@@ -107,7 +108,9 @@ Output:
 ```text
 Sum from 1 to 5 is 15
 ```
+Figure 3: Creation and Execution of C Program
 
+![C Program Execution](Screenshots/3.png)
 ---
 
 ## Step 3: Display Source Code
@@ -119,7 +122,9 @@ Command:
 ```bash
 cat sum_1_to_n.c
 ```
+### Figure 4: Source Code Verification
 
+![Source Code Verification](Screenshots/4.png)
 ---
 
 ## Step 4: RISC-V Compilation (-O1)
@@ -131,6 +136,9 @@ Command:
 ```bash
 riscv64-unknown-elf-gcc -O1 -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
 ```
+### Figure 5: Navigation to RISC-V Workspace
+
+![Workspace Navigation](Screenshots/7.png)
 
 Explanation:
 
@@ -162,6 +170,9 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o
 
 The generated assembly instructions were analyzed.
 
+Figure 8: Generated Binary Verification
+
+![Generated Binary](Screenshots/8.png)
 ---
 
 ## Step 7: View Objdump Using Less
@@ -174,6 +185,9 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 This enabled easier navigation through the generated assembly code.
 
+### Figure 10: Main Function Assembly Analysis for -O1
+
+![Main Function Assembly](Screenshots/9.png)
 ---
 
 ## Step 8: Compilation Using -Ofast Optimization
@@ -185,7 +199,9 @@ Command:
 ```bash
 riscv64-unknown-elf-gcc -Ofast -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
 ```
+### Figure 9: Main Function Assembly Analysis for -Ofast
 
+![Main Function Assembly](Screenshots/10.png)
 ---
 
 ## Step 9: Generate Optimized Object Dump
@@ -198,6 +214,9 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 The optimized assembly code was analyzed and compared with the previous output.
 
+### Figure 11: -Ofast Optimization Analysis
+
+![Ofast Optimization](Screenshots/11.png)
 ---
 
 ## Observations
