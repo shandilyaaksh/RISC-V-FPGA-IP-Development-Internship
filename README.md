@@ -19,9 +19,30 @@
 * RISC-V object dump generation
 * Assembly code analysis
 
-### Task 2
+### Task 2 - SPIKE Simulation, Optimization Analysis and Multi-Floor Elevator Control System
 
-(To be added)
+#### Part 1: SPIKE Simulation and Optimization Analysis
+
+* Native GCC compilation and execution
+* RISC-V compilation using -O1 optimization
+* RISC-V compilation using -Ofast optimization
+* SPIKE simulation and output verification
+* RISC-V object dump generation
+* Assembly code analysis
+* SPIKE debug mode and register observation
+* Analysis of LUI and ADDI instructions
+* Instruction count comparison between -O1 and -Ofast
+
+#### Part 2: Multi-Floor Elevator Control System Simulation
+
+* Development of Multi-Floor Elevator Control System application
+* Native GCC compilation and execution
+* RISC-V cross compilation
+* SPIKE simulation and verification
+* RISC-V object dump generation
+* Assembly code analysis
+* Instruction count calculation for -O1 and -Ofast
+* Optimization comparison and performance analysis
 
 ---
 
@@ -393,6 +414,147 @@ ADDI adds a signed immediate value to the contents of a register.
 ### Figure 6 : ADDI Instruction Format
 
 ![ADDI Instruction](Task2/Screenshots/T2_Fig6_ADDI_Instruction.png)
+---
+
+## SPIKE Debugging and Register Analysis
+
+To understand the execution of RISC-V instructions at the register level, the program was executed in SPIKE debug mode. The debugger allows observation of register values before and after instruction execution.
+
+### Commands Used
+
+```bash
+spike -d pk sum_1_to_n.o
+```
+
+The execution was halted at the beginning of the `main()` function and selected registers were examined.
+
+---
+
+### Figure X: Register Observation Using SPIKE Debug Mode
+
+![SPIKE Register Analysis](Screenshots/12.png)
+
+---
+
+### Analysis of LUI Instruction
+
+The first instruction observed was:
+
+```assembly
+lui a2, 0x1
+```
+
+Register examined:
+
+```bash
+reg 0 a2
+```
+
+Initial value of register `a2`:
+
+```text
+0x0000000000000000
+```
+
+Value after instruction execution:
+
+```text
+0x0000000000001000
+```
+
+#### Explanation
+
+The **LUI (Load Upper Immediate)** instruction loads a 20-bit immediate value into the upper bits of a register while the lower 12 bits are cleared.
+
+For the instruction:
+
+```assembly
+lui a2, 0x1
+```
+
+the value loaded into register `a2` becomes:
+
+```text
+0x0000000000001000
+```
+
+This instruction is commonly used for constructing large constants and memory addresses.
+
+---
+
+### Analysis of LUI Instruction on Register a0
+
+Instruction executed:
+
+```assembly
+lui a0, 0x21
+```
+
+Register examined:
+
+```bash
+reg 0 a0
+```
+
+Value after execution:
+
+```text
+0x0000000000021000
+```
+
+#### Explanation
+
+The instruction loads the immediate value `0x21` into the upper 20 bits of register `a0`.
+
+Resulting register value:
+
+```text
+0x0000000000021000
+```
+
+This value is later used as part of an address calculation for accessing program data and string literals.
+
+---
+
+### Analysis of ADDI Instruction
+
+The next instruction observed was:
+
+```assembly
+addi sp, sp, -16
+```
+
+Register examined:
+
+```bash
+reg 0 sp
+```
+
+Value before execution:
+
+```text
+0x00000000007f7e9b50
+```
+
+Value after execution:
+
+```text
+0x00000000007f7e9b40
+```
+
+#### Explanation
+
+The **ADDI (Add Immediate)** instruction performs arithmetic using a register and an immediate value.
+
+For the instruction:
+
+```assembly
+addi sp, sp, -16
+```
+
+the stack pointer is decremented by 16 bytes.
+
+This operation allocates stack space required for local variables and function execution.
 
 ---
 
@@ -501,16 +663,129 @@ riscv64-unknown-elf-objdump -d mfecs.o | less
 
 Instruction Count = 77
 
-## Optimization Comparison
+## Instruction Count Calculation
 
-| Parameter | -O1 | -Ofast |
-|------------|------|---------|
-| Instruction Count | 80 | 77 |
-| Code Size | Larger | Smaller |
+The number of instructions in the `main()` function was calculated using the start and end addresses obtained from the RISC-V object dump.
+
+### Formula
+
+```text
+Number of Instructions = ((End Address - Start Address) / 4) + 1
+```
+
+Since each RV64I instruction occupies **4 bytes**, the address difference is divided by 4 to obtain the total number of instructions.
+
+---
+
+### Calculation for -O1
+
+Start Address:
+
+```text
+0x10184
+```
+
+End Address:
+
+```text
+0x102c0
+```
+
+Calculation:
+
+```text
+(0x102c0 - 0x10184) / 4 + 1
+= 0x13c / 4 + 1
+= 316 / 4 + 1
+= 79 + 1
+= 80 Instructions
+```
+
+---
+
+### Calculation for -Ofast
+
+Start Address:
+
+```text
+0x100b0
+```
+
+End Address:
+
+```text
+0x101e0
+```
+
+Calculation:
+
+```text
+(0x101e0 - 0x100b0) / 4 + 1
+= 0x130 / 4 + 1
+= 304 / 4 + 1
+= 76 + 1
+= 77 Instructions
+```
+
+---
+
+### Figure X: Instruction Count Comparison
+
+![Instruction Count Comparison](Screenshots/XX.png)
+
+---
+
+### Instruction Count Comparison Table
+
+| Optimization Level | Start Address | End Address | Instruction Count |
+|-------------------|--------------|------------|------------------|
+| **-O1** | `0x10184` | `0x102c0` | **80** |
+| **-Ofast** | `0x100b0` | `0x101e0` | **77** |
+
+---
+
+### Analysis
+
+The executable generated using **-Ofast** contains fewer instructions than the executable generated using **-O1**.
+
+| Optimization | Instructions |
+|-------------|-------------|
+| **-O1** | 80 |
+| **-Ofast** | 77 |
+
+The reduction of **3 instructions** indicates that the compiler performed additional optimizations such as instruction simplification, redundant code elimination, and improved code generation.
+
+This demonstrates that higher optimization levels can reduce instruction count and potentially improve execution efficiency while maintaining the same functionality.
+
+---
+
+## Observations
+
+* The `sum_1_to_n.c` program was successfully compiled and executed using both the native GCC compiler and the RISC-V GCC cross-compiler.
+* The outputs obtained from native execution and SPIKE simulation were identical, confirming correct functionality of the generated RISC-V executable.
+* SPIKE simulation successfully executed the program for both **-O1** and **-Ofast** optimization levels.
+* RISC-V object dumps were generated and analyzed using the `objdump` utility.
+* SPIKE debug mode enabled instruction-level execution analysis and register observation.
+* The behavior of the **LUI** and **ADDI** instructions was studied by examining register values before and after execution.
+* The **LUI** instruction was observed loading immediate values into the upper bits of registers, while the **ADDI** instruction was used for arithmetic and stack allocation operations.
+* The instruction count of the `main()` function was reduced from **80 instructions** in **-O1** optimization to **77 instructions** in **-Ofast** optimization.
+* The reduction in instruction count demonstrates that higher optimization levels generate more efficient machine code.
+* A custom application, **Multi-Floor Elevator Control System Simulation**, was successfully developed and executed.
+* The elevator controller correctly handled floor requests, movement between floors, door operations, and request completion.
+* The application was successfully compiled using RISC-V GCC and executed using SPIKE, verifying compatibility with the RISC-V toolchain.
+* Assembly-level analysis confirmed that compiler optimizations affect the generated machine instructions while preserving program functionality.
+
+---
 
 ## Conclusion
 
-SPIKE simulation and assembly-level analysis were successfully performed using both -O1 and -Ofast optimization levels. A Multi-Floor Elevator Control System was implemented and analyzed using the RISC-V toolchain. Compiler optimization reduced instruction count while preserving functionality.
+Task 2 successfully demonstrated the use of the RISC-V software development and simulation flow. The sample C program was compiled with different optimization levels and executed using SPIKE, allowing detailed analysis of the generated assembly code and processor behavior. Through SPIKE debugging, the operation of key RISC-V instructions such as **LUI** and **ADDI** was examined, providing insight into register manipulation and stack management mechanisms.
+
+A comparison of optimization levels showed that **-Ofast** generated a more compact implementation than **-O1**, reducing the instruction count of the `main()` function from **80** to **77** instructions. This highlights the impact of compiler optimizations on code efficiency.
+
+Additionally, a **Multi-Floor Elevator Control System Simulation** was designed, compiled, and executed using both native GCC and the RISC-V GCC toolchain. The successful execution of the application in SPIKE verified the correctness of the generated RISC-V executable and demonstrated a practical control-system application relevant to digital design and embedded systems.
+
+The task successfully covered RISC-V compilation, SPIKE simulation, debugging, object dump analysis, optimization comparison, and application-level implementation, providing a comprehensive understanding of the RISC-V software development workflow.
 
   
 </details>
