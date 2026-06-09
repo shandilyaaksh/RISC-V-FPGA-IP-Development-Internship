@@ -310,6 +310,8 @@ The experiment successfully demonstrated the complete flow of C program compilat
 
 ---
 
+<!-- ========================================================================================================================================================== -->
+
 <details>
 <summary><b>Task 2 : SPIKE Simulation and Observation with -O1 and -Ofast</b></summary>
 
@@ -361,10 +363,6 @@ Output:
 Sum from 1 to 100 is 5050
 ```
 
-### Figure 1 : Source Code and GCC Execution
-
-![Source Code and GCC Execution](Task2/Screenshots/T2_Fig1_Source_Code_and_GCC_Execution.png)
-
 ---
 
 ## Step 2 : RISC-V Compilation using -Ofast
@@ -375,13 +373,13 @@ spike pk sum_1_to_n.o
 riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 ```
 
-### Figure 2 : SPIKE Simulation using -Ofast
+### Figure 1 : SPIKE Simulation using -Ofast
 
-![SPIKE Simulation Ofast](Task2/Screenshots/T2_Fig2_SPIKE_Ofast_Output.png)
+![SPIKE Simulation Ofast](21.png)
 
-### Figure 3 : Main Function Assembly (-Ofast)
+### Figure 2 : Main Function Assembly (-Ofast)
 
-![Objdump Ofast](Task2/Screenshots/T2_Fig3_Ofast_Objdump_Main.png)
+![Objdump Ofast](22.png)
 
 ### SPIKE Debug Mode Analysis (-Ofast)
 
@@ -393,9 +391,9 @@ reg 0 a0
 reg 0 sp
 ```
 
-### Figure 4 : Register Observation using SPIKE Debugger
+### Figure 3 : Register Observation using SPIKE Debugger
 
-![SPIKE Debug Ofast](Task2/Screenshots/T2_Fig4_SPIKE_Debug_Ofast.png)
+![SPIKE Debug Ofast](23.png)
 
 ## Understanding LUI and ADDI Instructions
 
@@ -403,17 +401,18 @@ reg 0 sp
 
 LUI loads a 20-bit immediate value into the upper 20 bits of a register.
 
-### Figure 5 : LUI Instruction Format
+### Figure 4 : LUI Instruction Format
 
-![LUI Instruction](Task2/Screenshots/T2_Fig5_LUI_Instruction.png)
+![LUI Instruction](23(1).png)
 
 ### ADDI (Add Immediate)
 
 ADDI adds a signed immediate value to the contents of a register.
 
-### Figure 6 : ADDI Instruction Format
+### Figure 5 : ADDI Instruction Format
 
-![ADDI Instruction](Task2/Screenshots/T2_Fig6_ADDI_Instruction.png)
+![ADDI Instruction](23(2).png)
+
 ---
 
 ## SPIKE Debugging and Register Analysis
@@ -427,14 +426,6 @@ spike -d pk sum_1_to_n.o
 ```
 
 The execution was halted at the beginning of the `main()` function and selected registers were examined.
-
----
-
-### Figure X: Register Observation Using SPIKE Debug Mode
-
-![SPIKE Register Analysis](Screenshots/12.png)
-
----
 
 ### Analysis of LUI Instruction
 
@@ -566,17 +557,13 @@ spike pk sum_1_to_n.o
 riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 ```
 
-### Figure 7 : SPIKE Simulation using -O1
+### Figure 6 : Main Function Assembly (-O1)
 
-![SPIKE Simulation O1](Task2/Screenshots/T2_Fig7_SPIKE_O1_Output.png)
+![O1 Main Function](24.png)
 
-### Figure 8 : Main Function Assembly (-O1)
+### Figure 7 : Register Observation using SPIKE Debugger for -O1
 
-![O1 Main Function](Task2/Screenshots/T2_Fig8_O1_Objdump_Main.png)
-
-### Figure 9 : Register Observation using SPIKE Debugger
-
-![SPIKE Debug O1](Task2/Screenshots/T2_Fig9_SPIKE_Debug_O1.png)
+![SPIKE Debug O1](25.png)
 
 ## Instruction Count Comparison
 
@@ -610,13 +597,76 @@ gcc mfecs.c
 ./a.out
 ```
 
-### Figure 10 : Multi-Floor Elevator Source Code
+## Program Used
 
-![MFECS Source Code](Task2/Screenshots/T2_Fig10_MFECS_Source_Code.png)
+### Multi-Floor Elevator Control System Simulation (mfecs.c)
 
-### Figure 11 : Program Execution
+```c
+#include <stdio.h>
 
-![MFECS GCC Output](Task2/Screenshots/T2_Fig11_MFECS_GCC_Output.png)
+int main()
+{
+    int current_floor = 0;
+    int requested_floor;
+
+    printf("================================\n");
+    printf("Multi-Floor Elevator Controller\n");
+    printf("================================\n");
+
+    printf("current floor: %d\n", current_floor);
+    printf("enter requested floor (0-5): ");
+    scanf("%d", &requested_floor);
+
+    if(requested_floor < 0 || requested_floor > 5)
+    {
+        printf("invalid request\n");
+        return 0;
+    }
+
+    if(requested_floor == current_floor)
+    {
+        printf("elevator already at floor %d\n", current_floor);
+        printf("door opened\n");
+        printf("door closed\n");
+        return 0;
+    }
+
+    if(requested_floor > current_floor)
+    {
+        printf("\nstate: moving_up\n");
+
+        while(current_floor < requested_floor)
+        {
+            current_floor++;
+            printf("reached floor %d\n", current_floor);
+        }
+    }
+    else
+    {
+        printf("\nstate: moving_down\n");
+
+        while(current_floor > requested_floor)
+        {
+            current_floor--;
+            printf("reached floor %d\n", current_floor);
+        }
+    }
+
+    printf("\nstate: door_open\n");
+    printf("door opened at floor %d\n", current_floor);
+
+    printf("\nstate: door_close\n");
+    printf("door closed\n");
+
+    printf("\nrequest completed successfully\n");
+
+    return 0;
+}
+```
+
+### Figure 8 : Program Execution using gcc
+
+![MFECS GCC Output](27.png)
 
 ---
 
@@ -629,17 +679,17 @@ spike pk mfecs.o
 riscv64-unknown-elf-objdump -d mfecs.o | less
 ```
 
-### Figure 12 : RISC-V Compilation and SPIKE Simulation (-O1)
+### Figure 9 : RISC-V Compilation and SPIKE Simulation (-O1)
 
-![MFECS SPIKE O1](Task2/Screenshots/T2_Fig12_MFECS_SPIKE_O1.png)
+![MFECS SPIKE O1](28.png)
 
-### Figure 13 : Main Function Start Address (-O1)
+### Figure 10 : Main Function Start Address (-O1)
 
-![MFECS O1 Start](Task2/Screenshots/T2_Fig13_MFECS_O1_Objdump_Start.png)
+![MFECS O1 Start](29.png)
 
-### Figure 14 : Main Function End Address (-O1)
+### Figure 11 : Main Function End Address (-O1)
 
-![MFECS O1 End](Task2/Screenshots/T2_Fig14_MFECS_O1_Objdump_End.png)
+![MFECS O1 End](210.png)
 
 Instruction Count = 80
 
@@ -653,13 +703,13 @@ spike pk mfecs.o
 riscv64-unknown-elf-objdump -d mfecs.o | less
 ```
 
-### Figure 15 : Main Function Start Address (-Ofast)
+### Figure 12 : Main Function Start Address (-Ofast)
 
-![MFECS Ofast Start](Task2/Screenshots/T2_Fig15_MFECS_Ofast_Objdump_Start.png)
+![MFECS Ofast Start](211.png)
 
-### Figure 16 : Main Function End Address (-Ofast)
+### Figure 13 : Main Function End Address (-Ofast)
 
-![MFECS Ofast End](Task2/Screenshots/T2_Fig16_MFECS_Ofast_Objdump_End.png)
+![MFECS Ofast End](212.png)
 
 Instruction Count = 77
 
@@ -727,13 +777,6 @@ Calculation:
 = 77 Instructions
 ```
 
----
-
-### Figure X: Instruction Count Comparison
-
-![Instruction Count Comparison](Screenshots/XX.png)
-
----
 
 ### Instruction Count Comparison Table
 
