@@ -289,6 +289,234 @@ The experiment successfully demonstrated the complete flow of C program compilat
 
 ---
 
+<details>
+<summary><b>Task 2 : SPIKE Simulation and Observation with -O1 and -Ofast</b></summary>
+
+<br>
+
+## Aim
+
+### Part 1
+To perform SPIKE simulation and analyze the RISC-V assembly generated using different compiler optimization levels (-O1 and -Ofast) for a simple C program.
+
+### Part 2
+To design and implement a simple application, **Multi-Floor Elevator Control System Simulation**, and compile, execute, simulate, and analyze it using RISC-V GCC and SPIKE.
+
+---
+
+# Part 1 : SPIKE Simulation and Observation using -O1 and -Ofast
+
+## Program Used
+
+### sum_1_to_n.c
+
+```c
+#include <stdio.h>
+
+int main()
+{
+    int i, sum = 0, n = 100;
+
+    for(i = 1; i <= n; i++)
+        sum = sum + i;
+
+    printf("Sum from 1 to %d is %d\n", n, sum);
+
+    return 0;
+}
+```
+
+## Step 1 : Native GCC Compilation and Verification
+
+```bash
+cat sum_1_to_n.c
+gcc sum_1_to_n.c
+./a.out
+```
+
+Output:
+
+```text
+Sum from 1 to 100 is 5050
+```
+
+### Figure 1 : Source Code and GCC Execution
+
+![Source Code and GCC Execution](Task2/Screenshots/T2_Fig1_Source_Code_and_GCC_Execution.png)
+
+---
+
+## Step 2 : RISC-V Compilation using -Ofast
+
+```bash
+riscv64-unknown-elf-gcc -Ofast -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
+spike pk sum_1_to_n.o
+riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
+```
+
+### Figure 2 : SPIKE Simulation using -Ofast
+
+![SPIKE Simulation Ofast](Task2/Screenshots/T2_Fig2_SPIKE_Ofast_Output.png)
+
+### Figure 3 : Main Function Assembly (-Ofast)
+
+![Objdump Ofast](Task2/Screenshots/T2_Fig3_Ofast_Objdump_Main.png)
+
+### SPIKE Debug Mode Analysis (-Ofast)
+
+```bash
+spike -d pk sum_1_to_n.o
+until pc 0 100b0
+reg 0 a2
+reg 0 a0
+reg 0 sp
+```
+
+### Figure 4 : Register Observation using SPIKE Debugger
+
+![SPIKE Debug Ofast](Task2/Screenshots/T2_Fig4_SPIKE_Debug_Ofast.png)
+
+## Understanding LUI and ADDI Instructions
+
+### LUI (Load Upper Immediate)
+
+LUI loads a 20-bit immediate value into the upper 20 bits of a register.
+
+### Figure 5 : LUI Instruction Format
+
+![LUI Instruction](Task2/Screenshots/T2_Fig5_LUI_Instruction.png)
+
+### ADDI (Add Immediate)
+
+ADDI adds a signed immediate value to the contents of a register.
+
+### Figure 6 : ADDI Instruction Format
+
+![ADDI Instruction](Task2/Screenshots/T2_Fig6_ADDI_Instruction.png)
+
+---
+
+## Step 3 : RISC-V Compilation using -O1
+
+```bash
+riscv64-unknown-elf-gcc -O1 -mabi=lp64 -march=rv64i -o sum_1_to_n.o sum_1_to_n.c
+spike pk sum_1_to_n.o
+riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
+```
+
+### Figure 7 : SPIKE Simulation using -O1
+
+![SPIKE Simulation O1](Task2/Screenshots/T2_Fig7_SPIKE_O1_Output.png)
+
+### Figure 8 : Main Function Assembly (-O1)
+
+![O1 Main Function](Task2/Screenshots/T2_Fig8_O1_Objdump_Main.png)
+
+### Figure 9 : Register Observation using SPIKE Debugger
+
+![SPIKE Debug O1](Task2/Screenshots/T2_Fig9_SPIKE_Debug_O1.png)
+
+## Instruction Count Comparison
+
+### -O1
+
+15 Instructions
+
+### -Ofast
+
+12 Instructions
+
+| Parameter | -O1 | -Ofast |
+|------------|------|---------|
+| Output | 5050 | 5050 |
+| Loop Preserved | Yes | No |
+| Main Function Instructions | 15 | 12 |
+
+---
+
+# Part 2 : Multi-Floor Elevator Control System Simulation
+
+## Aim
+
+To simulate the operation of a multi-floor elevator controller and analyze the generated RISC-V assembly using GCC, SPIKE, and Objdump.
+
+## Step 1 : Program Creation and Native GCC Execution
+
+```bash
+gedit mfecs.c
+gcc mfecs.c
+./a.out
+```
+
+### Figure 10 : Multi-Floor Elevator Source Code
+
+![MFECS Source Code](Task2/Screenshots/T2_Fig10_MFECS_Source_Code.png)
+
+### Figure 11 : Program Execution
+
+![MFECS GCC Output](Task2/Screenshots/T2_Fig11_MFECS_GCC_Output.png)
+
+---
+
+## Step 2 : RISC-V Compilation and SPIKE Simulation (-O1)
+
+```bash
+riscv64-unknown-elf-gcc -O1 -mabi=lp64 -march=rv64i -o mfecs.o mfecs.c
+ls -ltr mfecs.o
+spike pk mfecs.o
+riscv64-unknown-elf-objdump -d mfecs.o | less
+```
+
+### Figure 12 : RISC-V Compilation and SPIKE Simulation (-O1)
+
+![MFECS SPIKE O1](Task2/Screenshots/T2_Fig12_MFECS_SPIKE_O1.png)
+
+### Figure 13 : Main Function Start Address (-O1)
+
+![MFECS O1 Start](Task2/Screenshots/T2_Fig13_MFECS_O1_Objdump_Start.png)
+
+### Figure 14 : Main Function End Address (-O1)
+
+![MFECS O1 End](Task2/Screenshots/T2_Fig14_MFECS_O1_Objdump_End.png)
+
+Instruction Count = 80
+
+---
+
+## Step 3 : RISC-V Compilation and SPIKE Simulation (-Ofast)
+
+```bash
+riscv64-unknown-elf-gcc -Ofast -mabi=lp64 -march=rv64i -o mfecs.o mfecs.c
+spike pk mfecs.o
+riscv64-unknown-elf-objdump -d mfecs.o | less
+```
+
+### Figure 15 : Main Function Start Address (-Ofast)
+
+![MFECS Ofast Start](Task2/Screenshots/T2_Fig15_MFECS_Ofast_Objdump_Start.png)
+
+### Figure 16 : Main Function End Address (-Ofast)
+
+![MFECS Ofast End](Task2/Screenshots/T2_Fig16_MFECS_Ofast_Objdump_End.png)
+
+Instruction Count = 77
+
+## Optimization Comparison
+
+| Parameter | -O1 | -Ofast |
+|------------|------|---------|
+| Instruction Count | 80 | 77 |
+| Code Size | Larger | Smaller |
+
+## Conclusion
+
+SPIKE simulation and assembly-level analysis were successfully performed using both -O1 and -Ofast optimization levels. A Multi-Floor Elevator Control System was implemented and analyzed using the RISC-V toolchain. Compiler optimization reduced instruction count while preserving functionality.
+
+  
+</details>
+
+---
+
 ## Author
 
 **Name:** Amritanshu Kumar Shandilya
