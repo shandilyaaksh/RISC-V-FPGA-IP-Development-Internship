@@ -375,11 +375,15 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 ### Figure 1 : SPIKE Simulation using -Ofast
 
-![SPIKE Simulation Ofast](21.png)
+<p align="center">
+  <img src="Screenshots/21.png" width="850">
+</p>
 
 ### Figure 2 : Main Function Assembly (-Ofast)
 
-![Objdump Ofast](22.png)
+<p align="center">
+  <img src="Screenshots/22.png" width="850">
+</p>
 
 ### SPIKE Debug Mode Analysis (-Ofast)
 
@@ -393,7 +397,9 @@ reg 0 sp
 
 ### Figure 3 : Register Observation using SPIKE Debugger
 
-![SPIKE Debug Ofast](23.png)
+<p align="center">
+  <img src="Screenshots/23.png" width="850">
+</p>
 
 ## Understanding LUI and ADDI Instructions
 
@@ -403,7 +409,9 @@ LUI loads a 20-bit immediate value into the upper 20 bits of a register.
 
 ### Figure 4 : LUI Instruction Format
 
-![LUI Instruction](23(1).png)
+<p align="center">
+  <img src="Screenshots/23(1).png" width="850">
+</p>
 
 ### ADDI (Add Immediate)
 
@@ -411,7 +419,9 @@ ADDI adds a signed immediate value to the contents of a register.
 
 ### Figure 5 : ADDI Instruction Format
 
-![ADDI Instruction](23(2).png)
+<p align="center">
+  <img src="Screenshots/23(2).png" width="850">
+</p>
 
 ---
 
@@ -559,11 +569,15 @@ riscv64-unknown-elf-objdump -d sum_1_to_n.o | less
 
 ### Figure 6 : Main Function Assembly (-O1)
 
-![O1 Main Function](24.png)
+<p align="center">
+  <img src="Screenshots/24.png" width="850">
+</p>
 
 ### Figure 7 : Register Observation using SPIKE Debugger for -O1
 
-![SPIKE Debug O1](25.png)
+<p align="center">
+  <img src="Screenshots/25.png" width="850">
+</p>
 
 ## Instruction Count Comparison
 
@@ -666,7 +680,9 @@ int main()
 
 ### Figure 8 : Program Execution using gcc
 
-![MFECS GCC Output](27.png)
+<p align="center">
+  <img src="Screenshots/27.png" width="850">
+</p>
 
 ---
 
@@ -681,15 +697,21 @@ riscv64-unknown-elf-objdump -d mfecs.o | less
 
 ### Figure 9 : RISC-V Compilation and SPIKE Simulation (-O1)
 
-![MFECS SPIKE O1](28.png)
+<p align="center">
+  <img src="Screenshots/28.png" width="850">
+</p>
 
 ### Figure 10 : Main Function Start Address (-O1)
 
-![MFECS O1 Start](29.png)
+<p align="center">
+  <img src="Screenshots/29.png" width="850">
+</p>
 
 ### Figure 11 : Main Function End Address (-O1)
 
-![MFECS O1 End](210.png)
+<p align="center">
+  <img src="Screenshots/210.png" width="850">
+</p>
 
 Instruction Count = 80
 
@@ -705,11 +727,15 @@ riscv64-unknown-elf-objdump -d mfecs.o | less
 
 ### Figure 12 : Main Function Start Address (-Ofast)
 
-![MFECS Ofast Start](211.png)
+<p align="center">
+  <img src="Screenshots/211.png" width="850">
+</p>
 
 ### Figure 13 : Main Function End Address (-Ofast)
 
-![MFECS Ofast End](212.png)
+<p align="center">
+  <img src="Screenshots/212.png" width="850">
+</p>
 
 Instruction Count = 77
 
