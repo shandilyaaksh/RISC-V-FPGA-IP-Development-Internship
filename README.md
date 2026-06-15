@@ -7,9 +7,9 @@
 
 ---
 
-## Task List
+# Task List
 
-### Task 1 - RISC-V Toolchain Setup and Compilation Flow
+## Task 1 - RISC-V Toolchain Setup and Compilation Flow
 
 * Creation of GitHub repository
 * Development of a C program
@@ -19,7 +19,7 @@
 * RISC-V object dump generation
 * Assembly code analysis
 
-### Task 2 - SPIKE Simulation, Optimization Analysis and Multi-Floor Elevator Control System
+## Task 2 - SPIKE Simulation, Optimization Analysis and Multi-Floor Elevator Control System
 
 #### Part 1: SPIKE Simulation and Optimization Analysis
 
