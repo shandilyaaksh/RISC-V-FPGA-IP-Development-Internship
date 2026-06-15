@@ -23,26 +23,36 @@
 
 #### Part 1: SPIKE Simulation and Optimization Analysis
 
-* Native GCC compilation and execution
-* RISC-V compilation using -O1 optimization
-* RISC-V compilation using -Ofast optimization
-* SPIKE simulation and output verification
-* RISC-V object dump generation
-* Assembly code analysis
-* SPIKE debug mode and register observation
-* Analysis of LUI and ADDI instructions
-* Instruction count comparison between -O1 and -Ofast
+* GCC and RISC-V compilation
+* -O1 and -Ofast optimization analysis
+* SPIKE simulation and verification
+* Object dump and assembly analysis
+* Register observation in debug mode
+* LUI and ADDI instruction analysis
+* Instruction count comparison
 
 #### Part 2: Multi-Floor Elevator Control System Simulation
 
-* Development of Multi-Floor Elevator Control System application
-* Native GCC compilation and execution
-* RISC-V cross compilation
+* Elevator control system development
+* GCC and RISC-V compilation
 * SPIKE simulation and verification
-* RISC-V object dump generation
-* Assembly code analysis
-* Instruction count calculation for -O1 and -Ofast
-* Optimization comparison and performance analysis
+* Object dump and assembly analysis
+* Instruction count calculation
+* Optimization and performance comparison
+
+## Task 3 - GitHub Codespaces, Local Environment Setup and Custom RISC-V Firmware Execution
+
+* GitHub Codespaces setup and repository cloning
+* Verification and modification of reference RISC-V program
+* Compilation and execution using Spike simulator
+* Cloning and exploration of vsdfpga_labs repository
+* Development and execution of custom riscv_logo.c firmware
+* Local machine workspace preparation
+* Installation and verification of RISC-V GCC Toolchain
+* Installation and verification of Spike ISA Simulator and Proxy Kernel (pk)
+* Local firmware compilation and simulation
+* Output verification and documentation
+* GitHub repository creation and submission
 
 ---
 
