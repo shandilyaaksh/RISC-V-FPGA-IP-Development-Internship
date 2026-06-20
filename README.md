@@ -1326,23 +1326,6 @@ The new `GPIO` module (`gpio.v`) is the peripheral itself. It contains a single 
 
 In this task, the GPIO output (`gpio_out`) is exposed **internally** within the SoC (as required by the "Mandatory" simulation step). It can optionally be routed to physical FPGA pins (e.g., onboard LEDs) in the optional hardware-validation step, but that was not required for completion of Task 4.
 
-### Architecture Diagram
-
-```mermaid
-graph TD
-    A[RISC-V Processor Core] -- mem_addr / mem_wdata / mem_wmask / mem_rstrb --> B[Bus Decode Logic in riscv.v]
-    B -- isRAM --> C[Memory: 6KB BRAM]
-    B -- isIO + IO_LEDS_bit --> D[LED Peripheral]
-    B -- isIO + IO_UART_*_bit --> E[UART Peripheral]
-    B -- gpio_sel --> F[GPIO Output IP - gpio.v]
-    C -- RAM_rdata --> G[mem_rdata mux]
-    D -- LEDS state --> G
-    E -- IO_rdata --> G
-    F -- gpio_rdata --> G
-    G -- mem_rdata --> A
-    F -- gpio_out --> H[External Pins / LEDs - optional]
-```
-
 ---
 
 ## Implementation Steps
