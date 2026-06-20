@@ -1351,7 +1351,9 @@ graph TD
 
 ### Step 1: Exploring the Existing SoC Directory Structure
 
-**Reference:** `1.png`
+<p align="center">
+  <img src="Task4/41.png" width="850">
+</p>
 
 **Description**
 The terminal session begins by navigating the project workspace (`~/my_setup/vsdfpga_labs/basicRISCV`) and using `find . -name "*.v"` to enumerate every Verilog source file in the project: `femtopll.v`, `riscv.v`, `clockworks.v`, and `emitter_uart.v`. The project is organized into two folders — `Firmware` (C source for the embedded software) and `RTL` (hardware description files).
@@ -1371,7 +1373,9 @@ Before writing a single line of new RTL, it is essential to understand what alre
 
 ### Step 2: Inspecting the Memory and Processor Module Interfaces
 
-**Reference:** `2.png`
+<p align="center">
+  <img src="Task4/42.png" width="850">
+</p>
 
 **Description**
 The `riscv.v` file is opened and the beginning of the file is reviewed. Two key modules are visible: `Memory` (the on-chip RAM controller) and the start of `Processor` (the RISC-V CPU). The `Memory` module declares the canonical memory-bus port list: `mem_addr`, `mem_rdata`, `mem_rstrb`, `mem_wdata`, and `mem_wmask`, and stores 1,536 32-bit words (6 KB) loaded from `firmware.hex` via `$readmemh`.
@@ -1395,7 +1399,9 @@ This is the most important signal set in the entire task. Any new peripheral —
 
 ### Step 3: Studying the Existing UART Peripheral and Address Signal Flow
 
-**Reference:** `3.png`
+<p align="center">
+  <img src="Task4/43.png" width="850">
+</p>
 
 **Description**
 Using `grep -n "uart" riscv.v` and `grep -n "mem_addr" riscv.v`, the existing UART peripheral instantiation is located, along with every place `mem_addr` is consumed in the file — from the byte-address-to-word-address conversion (`word_addr = mem_addr[31:2]`) to the final address-decode logic (`isIO = mem_addr[22]`).
@@ -1413,7 +1419,9 @@ The UART instantiation is effectively a **template** for how *any* peripheral sh
 
 ### Step 4: Understanding the One-Hot/Bit-Indexed IO Decoding Scheme
 
-**Reference:** `4.png`
+<p align="center">
+  <img src="Task4/44.png" width="850">
+</p>
 
 **Description**
 Two more `grep` searches — for `"isIO"` and `"IO_"` — reveal the complete existing address-decoding convention used for the LED and UART peripherals. A single bit of the address (`mem_addr[22]`) flags the entire transaction as "IO" rather than "RAM," and within the IO page, individual peripherals are selected by checking specific bits of the *word* address using named `localparam` constants.
@@ -1435,7 +1443,9 @@ This step revealed that the existing IO scheme is **bit-indexed within a 4 MB-al
 
 ### Step 5: Writing the GPIO IP RTL Module
 
-**Reference:** `5.png`
+<p align="center">
+  <img src="Task4/45.png" width="850">
+</p>
 
 **Description**
 A new file, `gpio.v`, is created in `gedit` and the complete `GPIO` module is written. The module has a clean, minimal interface: `clk`, `resetn`, a bus-style `write_en`/`read_en`/`write_data` interface, and two outputs — `read_data` (back to the bus) and `gpio_out` (the peripheral's actual register value, available for external use).
@@ -1486,7 +1496,9 @@ This is the core deliverable of the task: the IP itself. Implementing register s
 
 ### Step 6: Syntax-Checking the New GPIO Module in Isolation
 
-**Reference:** `6.png`
+<p align="center">
+  <img src="Task4/46.png" width="850">
+</p>
 
 **Description**
 The terminal is used to compile `gpio.v` on its own with `iverilog gpio.v`. The first attempt fails ("No such file or directory") because the file had not yet been saved from `gedit`; after saving, the second `iverilog gpio.v` attempt succeeds silently (no errors), confirming the module compiles. The full saved file contents are then printed with `cat gpio.v` to provide a clean record of the final RTL.
@@ -1502,7 +1514,9 @@ Verifying a new module compiles **in isolation** before integration is a standar
 
 ### Step 7: Re-Confirming the Existing IO Bit Assignments Before Integration
 
-**Reference:** `7.png`
+<p align="center">
+  <img src="Task4/47.png" width="850">
+</p>
 
 **Description**
 Immediately before modifying `riscv.v`, two targeted `grep` searches re-confirm the exact existing bit assignments: `IO_LEDS_bit = 0` and `IO_UART_DAT_bit = 1` / `IO_UART_CNTL_bit = 2`, along with how they are used in conditional logic (`if(isIO & mem_wstrb & mem_wordaddr[IO_LEDS_bit])`) and in the UART status readback expression.
@@ -1517,7 +1531,9 @@ In digital design, **address/bit collisions** are a common and hard-to-debug cla
 
 ### Step 8: Including the New GPIO Module in the SoC Top-Level File
 
-**Reference:** `8.png`
+<p align="center">
+  <img src="Task4/48.png" width="850">
+</p>
 
 **Description**
 `riscv.v` is opened side-by-side with `gpio.v` in `gedit`, and a new line is added near the top of the file: `` `include "gpio.v" `` — placed immediately after the existing `` `include "clockworks.v" `` and `` `include "emitter_uart.v" `` directives.
@@ -1532,7 +1548,9 @@ This is the first concrete **integration** action — until this line is added, 
 
 ### Step 9: Adding Address Decode and Enable Generation Logic for GPIO
 
-**Reference:** `10.png`
+<p align="center">
+  <img src="Task4/410.png" width="850">
+</p>
 
 **Description**
 Deeper inside `riscv.v`, immediately after the `Processor` instantiation, new wires are added: `gpio_sel = (mem_addr == 32'h20000000)`, `gpio_rdata`, `gpio_out`, `gpio_write = gpio_sel & (|mem_wmask)`, and `gpio_read = gpio_sel & mem_rstrb`. These sit alongside the pre-existing `RAM_rdata`, `mem_wordaddr`, `isIO`, `isRAM`, and `mem_wstrb` wires.
@@ -1554,7 +1572,9 @@ This is the heart of **address decoding**: translating a raw bus address into a 
 
 ### Step 10: Locating the Read-Data Multiplexer That Needed Modification
 
-**Reference:** `11.png`
+<p align="center">
+  <img src="Task4/411.png" width="850">
+</p>
 
 **Description**
 Two `grep` searches — for `"assign mem_rdata"` and `"mem_rdata"` — locate every place the final read-data signal is produced or consumed, culminating in the single line `assign mem_rdata = isRAM ? RAM_rdata :` (continuing on the next line), which at this point in the process does **not** yet account for GPIO.
@@ -1569,7 +1589,9 @@ Modifying a multiplexer in the wrong location, or with the wrong priority, can s
 
 ### Step 11: Confirming the Read-Strobe Signal Semantics
 
-**Reference:** `12.png` *(terminal portion: `mem_rstrb` grep)*
+<p align="center">
+  <img src="Task4/412.png" width="850">
+</p>
 
 **Description**
 A `sed`-extracted snippet of the existing IO read-data expression is reviewed, followed by `grep -n "mem_rstrb" riscv.v`, which shows every usage of the read-strobe signal — from its declaration (`input mem_rstrb, // goes high when processor wants to read`) through to its use in the `Processor`'s state machine (`assign mem_rstrb = (state == FETCH_INSTR || state == LOAD);`) and its newly added consumer, `gpio_read = gpio_sel & mem_rstrb`.
@@ -1585,7 +1607,9 @@ This step validates that the newly written `gpio_read = gpio_sel & mem_rstrb` ex
 
 ### Step 12: Extending the Read-Data Multiplexer to Include GPIO
 
-**Reference:** `12.png` *(editor portion)*
+<p align="center">
+  <img src="Task4/412(1).png" width="850">
+</p>
 
 **Description**
 Inside the `gedit` view of `riscv.v` (lines ~381–429), the UART instantiation and its status-readback expression (`IO_rdata`) are visible, immediately followed by the modified multiplexer:
@@ -1609,7 +1633,9 @@ A memory-mapped peripheral is only "memory-mapped" if **both** directions of the
 
 ### Step 13: Instantiating the GPIO Peripheral in the SoC Top-Level
 
-**Reference:** `13.png`
+<p align="center">
+  <img src="Task4/413.png" width="850">
+</p>
 
 **Description**
 The actual module instantiation is added directly beneath the UART instance:
@@ -1648,7 +1674,9 @@ This is the literal moment the GPIO IP becomes "part of the system," matching th
 
 ### Step 14: Consolidated Sanity Check of the Entire GPIO Wiring
 
-**Reference:** `14.png`
+<p align="center">
+  <img src="Task4/414.png" width="850">
+</p>
 
 **Description**
 A single `grep -n "gpio_" riscv.v` lists every GPIO-related line in the file in one view: the address decode (`gpio_sel`), the data wires (`gpio_rdata`, `gpio_out`), the enable generation (`gpio_write`, `gpio_read`), the instantiation (`GPIO gpio_inst (...)`), and the multiplexer term (`gpio_sel ? gpio_rdata :`).
@@ -1663,7 +1691,9 @@ This is a deliberate **design-review checkpoint**: before compiling and simulati
 
 ### Step 15: Confirming the New File is Part of the RTL Source Set
 
-**Reference:** `15.png`
+<p align="center">
+  <img src="Task4/415.png" width="850">
+</p>
 
 **Description**
 Running `find . -name "*.v"` again inside `basicRISCV` now returns five files instead of four: `femtopll.v`, `riscv.v`, `clockworks.v`, `emitter_uart.v`, and the newly added `gpio.v`.
@@ -1678,7 +1708,9 @@ Confirms there are no stray copies of `gpio.v` in the wrong directory and that v
 
 ### Step 16: Beginning the Firmware Test Program
 
-**Reference:** `16.png`
+<p align="center">
+  <img src="Task4/416.png" width="850">
+</p>
 
 **Description**
 The terminal navigates into the `Firmware` directory and launches `gedit gpio_test.c &` to create a new bare-metal C source file that will exercise the GPIO IP from software — beginning the task's mandatory simulation-validation phase.
@@ -1693,7 +1725,9 @@ Hardware-only verification (simulating the RTL with fixed test vectors) is usefu
 
 ### Step 17: Writing the GPIO Test Firmware
 
-**Reference:** `17.png`
+<p align="center">
+  <img src="Task4/417.png" width="850">
+</p>
 
 **Description**
 The completed `gpio_test.c` is shown:
@@ -1736,7 +1770,9 @@ This four-line test (write → read → print) is a minimal but complete functio
 
 ### Step 18: Building the Firmware and Resolving a Linker Conflict
 
-**Reference:** `18.png`
+<p align="center">
+  <img src="Task4/418.png" width="850">
+</p>
 
 **Description**
 The firmware build proceeds via `make`, individually assembling/compiling `start.S`, `putchar.S`, `print.c`, `memcpy.c`, and `errno.c` into object files. After confirming all `.o` files exist (`errno.o gpio_test.o memcpy.o perf.o print.o putchar.o riscv_logo.o start.o`), the final link step is attempted:
@@ -1774,7 +1810,9 @@ This step illustrates an essential, often under-appreciated part of embedded dev
 
 ### Step 19: Final RTL Simulation and GPIO Functional Verification
 
-**Reference:** `21.png`
+<p align="center">
+  <img src="Task4/421.png" width="850">
+</p>
 
 **Description**
 Back in the `RTL` directory, a clean simulation binary is built and run:
