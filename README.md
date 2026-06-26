@@ -2135,12 +2135,73 @@ Structural correctness is a necessary precondition before trusting any functiona
 
 ### Step 11: Software Validation and Functional Verification through Simulation
 
-<p align="center">
-  <img src="Task5/11.png" width="850">
-</p>
+#### Firmware Used for Validation (`gpio_test.c`)
 
+```c
+#include <stdint.h>
+
+void print_hex(unsigned int val);
+
+#define GPIO_BASE  0x20000000
+
+#define GPIO_DATA  (*(volatile uint32_t *)(GPIO_BASE + 0x00))
+#define GPIO_DIR   (*(volatile uint32_t *)(GPIO_BASE + 0x04))
+#define GPIO_READ  (*(volatile uint32_t *)(GPIO_BASE + 0x08))
+
+int main()
+{
+    uint32_t data;
+
+    // Test 1 : Configure all pins as outputs
+    GPIO_DIR = 0xFFFFFFFF;
+
+    data = GPIO_DIR;
+    print_hex(data);
+
+    // Test 2 : Write first pattern
+    GPIO_DATA = 0x12345678;
+
+    data = GPIO_DATA;
+    print_hex(data);
+
+    data = GPIO_READ;
+    print_hex(data);
+
+    // Test 3 : Write second pattern
+    GPIO_DATA = 0xAAAAAAAA;
+
+    data = GPIO_DATA;
+    print_hex(data);
+
+    data = GPIO_READ;
+    print_hex(data);
+
+    // Test 4 : Change direction
+    GPIO_DIR = 0x0000FFFF;
+
+    data = GPIO_DIR;
+    print_hex(data);
+
+    data = GPIO_READ;
+    print_hex(data);
+
+    // Test 5 : Clear GPIO
+    GPIO_DATA = 0x00000000;
+
+    data = GPIO_DATA;
+    print_hex(data);
+
+    data = GPIO_READ;
+    print_hex(data);
+
+    while (1);
+
+    return 0;
+}
+```
 **Description**
 `vvp a.out` runs the simulation and prints nine hex values:
+
 ```
 FFFFFFFF
 12345678
@@ -2152,12 +2213,16 @@ AAAAAAAA
 00000000
 00000000
 ```
+<p align="center">
+  <img src="Task5/11.png" width="850">
+</p>
 
 **Technical Analysis**
 Each line is one `print_hex()` call in `gpio_test.c`, driven by a real register read through the full chain: C pointer dereference → compiled `lw`/`sw` → CPU bus transaction → SoC address decode → GPIO register logic → read-data mux → UART → console. Every value matches exactly what the firmware wrote or what the direction-aware `GPIO_READ` logic should produce.
 
 **Importance**
 This is the mandatory simulation proof for the task — direct, unambiguous confirmation that address decoding, per-register writes, and direction-aware readback all work correctly together.
+
 
 ---
 
