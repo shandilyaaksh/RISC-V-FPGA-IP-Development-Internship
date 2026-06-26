@@ -9,63 +9,43 @@
 
 # Task List
 
-## Task 1 - RISC-V Toolchain Setup and Compilation Flow
+## Task 1 - RISC-V Toolchain Setup
 
-* Creation of GitHub repository
-* Development of a C program
-* Native GCC compilation and execution
-* Installation and verification of RISC-V toolchain
-* RISC-V cross compilation
-* RISC-V object dump generation
-* Assembly code analysis
+* GitHub repository setup
+* RISC-V toolchain installation and verification
+* Native & cross compilation
+* Object dump generation and assembly analysis
 
-## Task 2 - SPIKE Simulation, Optimization Analysis and Multi-Floor Elevator Control System
+## Task 2 - SPIKE Simulation & Optimization
 
-#### Part 1: SPIKE Simulation and Optimization Analysis
+**Part 1**
 
-* GCC and RISC-V compilation
-* -O1 and -Ofast optimization analysis
-* SPIKE simulation and verification
-* Object dump and assembly analysis
-* Register observation in debug mode
-* LUI and ADDI instruction analysis
-* Instruction count comparison
+* SPIKE simulation and optimization analysis
+* Assembly inspection and instruction count comparison
 
-#### Part 2: Multi-Floor Elevator Control System Simulation
+**Part 2**
 
-* Elevator control system development
-* GCC and RISC-V compilation
-* SPIKE simulation and verification
-* Object dump and assembly analysis
-* Instruction count calculation
-* Optimization and performance comparison
+* Multi-Floor Elevator Control System implementation
+* Performance evaluation using SPIKE simulation
 
-## Task 3 - GitHub Codespaces, Local Environment Setup and Custom RISC-V Firmware Execution
+## Task 3 - Firmware Development & Execution
 
-* GitHub Codespaces setup and repository cloning
-* Verification and modification of reference RISC-V program
-* Compilation and execution using Spike simulator
-* Cloning and exploration of vsdfpga_labs repository
-* Development and execution of custom riscv_logo.c firmware
-* Local machine workspace preparation
-* Installation and verification of RISC-V GCC Toolchain
-* Installation and verification of Spike ISA Simulator and Proxy Kernel (pk)
-* Local firmware compilation and simulation
-* Output verification and documentation
-* GitHub repository creation and submission
+* GitHub Codespaces and local environment setup
+* Custom RISC-V firmware development
+* Firmware compilation, simulation, and verification
 
-## Task 4 - GPIO Peripheral Integration and Validation in RISC-V SoC
+## Task 4 - GPIO Integration
 
-* Analysis of existing RISC-V SoC architecture and memory-mapped I/O
-* Design and implementation of a custom GPIO peripheral in Verilog
-* Integration of GPIO into the SoC with address decoding and bus connections
-* Development of firmware for GPIO read/write operations
-* Compilation and linking using the RISC-V toolchain
-* Simulation-based verification using Icarus Verilog and VVP
-* Validation of GPIO register updates and readback functionality
-* Documentation of implementation, integration, and simulation results
-* GitHub repository update and submission
+* GPIO peripheral design and SoC integration
+* Memory-mapped I/O implementation
+* Firmware development and RTL verification
 
+## Task 5 - Multi-Register GPIO Controller
+
+* Multi-register GPIO IP design
+* SoC integration and address decoding
+* Software validation and simulation
+* Documentation and verification
 
 ---
 
@@ -1969,7 +1949,7 @@ GPIO_DATA GPIO_DIR GPIO_READ
 
 ## Implementation Steps
 
-### Step 1
+### Step 1: Review of the Existing Single-Register GPIO Peripheral
 
 <p align="center">
   <img src="Task5/1.png" width="850">
@@ -1986,7 +1966,7 @@ Matches the task's required first step — reviewing the existing IP before writ
 
 ---
 
-### Step 2
+### Step 2: Identifying Existing GPIO Integration in the SoC
 
 <p align="center">
   <img src="Task5/2.png" width="850">
@@ -2003,7 +1983,7 @@ Builds a complete map of every line in `riscv.v` that will need to change, witho
 
 ---
 
-### Step 3
+### Step 3: Tracing the Memory Address Path for GPIO Access
 
 <p align="center">
   <img src="Task5/3.png" width="850">
@@ -2020,7 +2000,7 @@ Prevents computing an address field twice, at the wrong level of the design, whi
 
 ---
 
-### Step 4
+### Step 4: Analyzing GPIO Address Decoding Logic
 
 <p align="center">
   <img src="Task5/4.png" width="850">
@@ -2037,7 +2017,7 @@ Confirms that widening `gpio_sel` to an address-range comparison will be a safe,
 
 ---
 
-### Step 5
+### Step 5: Design and Implementation of the Multi-Register GPIO Peripheral
 
 <p align="center">
   <img src="Task5/5.png" width="850">
@@ -2054,7 +2034,7 @@ This is the structural foundation of the entire multi-register design — withou
 
 ---
 
-### Step 6
+### Step 6: Implementing GPIO Read, Write, and Direction Control Logic
 
 <p align="center">
   <img src="Task5/6.png" width="850">
@@ -2074,7 +2054,7 @@ Completes the IP's internal logic exactly as required: clean synchronous writes,
 
 ---
 
-### Step 7
+### Step 7: Integrating the Multi-Register GPIO into the RISC-V SoC
 
 <p align="center">
   <img src="Task5/7.png" width="850">
@@ -2099,7 +2079,7 @@ This is the exact point the new IP becomes electrically connected to the CPU's b
 
 ---
 
-### Step 8
+### Step 8: Exposing GPIO Signals Through the SoC Top Module
 
 <p align="center">
   <img src="Task5/8.png" width="850">
@@ -2116,7 +2096,7 @@ Matches the requirement to expose GPIO signals at the top module, keeping the So
 
 ---
 
-### Step 9
+### Step 9: Implementing Memory Mapping and Address Range Decoding
 
 <p align="center">
   <img src="Task5/9.png" width="850">
@@ -2136,7 +2116,7 @@ Without this change, no more than one register could ever be addressed — this 
 
 ---
 
-### Step 10
+### Step 10: RTL Compilation and Structural Verification
 
 <p align="center">
   <img src="Task5/10.png" width="850">
@@ -2153,7 +2133,7 @@ Structural correctness is a necessary precondition before trusting any functiona
 
 ---
 
-### Step 11
+### Step 11: Software Validation and Functional Verification through Simulation
 
 <p align="center">
   <img src="Task5/11.png" width="850">
