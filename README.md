@@ -1902,6 +1902,346 @@ This GPIO IP, and the integration methodology used to build it, now serves as a 
 
 ---
 
+<!-- ========================================================================================================================================================== -->
+
+<details>
+<summary><b>Task-5 - Design a Multi-Register GPIO IP with Software Control</b></summary>
+
+<br>
+
+## Objective
+
+The goal of this task was to upgrade the single-register GPIO peripheral built in Task-4 into a **multi-register GPIO controller**, capable of independently configuring pin direction, driving output values, and reading back pin state — and to integrate this upgraded IP into the existing RISC-V SoC. Success was defined as the RISC-V processor being able to configure, write, and read the new GPIO registers entirely through ordinary memory-mapped load/store instructions, with the result proven by running real compiled firmware in RTL simulation.
+
+---
+
+## Introduction
+
+**GPIO.** General Purpose Input/Output is the simplest possible bridge between software and the physical world — a set of pins whose behavior (drive a value out, or sense a value in) is controlled entirely by registers that software can read and write.
+
+**Memory-Mapped I/O.** In this SoC, GPIO is not accessed through any special instruction. It is simply assigned a small region of the processor's address space; ordinary `lw`/`sw` instructions — generated automatically by the C compiler from pointer dereferences — are the only mechanism needed to talk to it. The SoC's address-decoding logic is what recognizes a GPIO address and routes the access to the right place.
+
+**Why multiple GPIO registers are required.** A single register (Task-4) can only ever drive a fixed value — useful for an LED, but not for a real bidirectional pin. A realistic GPIO controller needs at least three things: a place to store the value to drive (`GPIO_DATA`), a place to say which pins are inputs vs. outputs (`GPIO_DIR`), and a place to read back what each pin is actually doing right now (`GPIO_READ`), which must behave differently for input pins than for output pins.
+
+**Processor-to-peripheral communication.** The CPU never talks to GPIO directly — it talks to the shared system bus (`mem_addr`, `mem_wdata`, `mem_rdata`, `mem_wmask`, `mem_rstrb`), the same bus RAM and the UART already use. The SoC's top-level decode logic is solely responsible for recognizing a GPIO-page address and forwarding the transaction into the IP; from the CPU's point of view, GPIO is indistinguishable from memory.
+
+---
+
+## GPIO Register Map
+
+| Register  | Offset | Access | Description                |
+| --------- | ------ | ------ | --------------------------- |
+| GPIO_DATA | 0x00   | R/W    | Output data register       |
+| GPIO_DIR  | 0x04   | R/W    | Direction control register |
+| GPIO_READ | 0x08   | Read   | Current GPIO state         |
+
+- **GPIO_DATA** — the value driven on every pin currently configured as an output; reading it returns exactly what was last written.
+- **GPIO_DIR** — a per-bit direction mask (`1` = output, `0` = input); also doubles as the output-enable signal exposed to the pin interface.
+- **GPIO_READ** — a read-only, computed register: for output pins it mirrors `GPIO_DATA`, for input pins it mirrors the real incoming `gpio_in` signal.
+
+---
+
+## System Architecture
+
+- **Processor** — the RISC-V core; issues a normal load or store whenever firmware touches `GPIO_DATA`, `GPIO_DIR`, or `GPIO_READ`.
+- **Memory Bus** — the single shared bus (`mem_addr`/`mem_wdata`/`mem_rdata`/`mem_wmask`/`mem_rstrb`) connecting the processor to every component in the SoC.
+- **Address Decoder** — top-level combinational logic in `riscv.v` that recognizes the GPIO IP's address page (`gpio_sel`) and, inside the IP itself, the specific register being targeted (`addr[3:2]`).
+- **GPIO Peripheral** — `gpio.v`: two synchronous storage registers (`gpio_data_reg`, `gpio_dir_reg`) plus combinational logic that computes the `GPIO_READ` value.
+- **External GPIO Pins** — `gpio_out`/`gpio_oe` are exposed at the SoC boundary (`GPIO_OUT`/`GPIO_OE`/`GPIO_IN`) for optional physical connection; in simulation, `gpio_in` is looped back to `gpio_out`.
+
+```
+   RISC-V Processor
+          |
+     Memory Bus
+          |
+  Address Decoder (gpio_sel)
+          |
+    GPIO Peripheral
+   /      |        \
+GPIO_DATA GPIO_DIR GPIO_READ
+   \      |        /
+     gpio_out / gpio_oe
+          |
+  External GPIO Pins
+```
+
+---
+
+## Implementation Steps
+
+### Step 1
+
+<p align="center">
+  <img src="Task5/1.png" width="850">
+</p>
+
+**Description**
+The terminal shows the **original, single-register `gpio.v`** from Task-4 — `write_en`/`read_en`/`write_data`/`read_data` ports, one `gpio_out` register, and `$display` statements printing `"[GPIO WRITE]"`/`"[GPIO READ]"` from inside the peripheral itself.
+
+**Technical Analysis**
+This module has no internal address decoding at all — there was only ever one thing to decode between. Reviewing it establishes the exact starting conventions (synchronous write, combinational read, active-low reset) that the new design must extend, not replace.
+
+**Importance**
+Matches the task's required first step — reviewing the existing IP before writing any new code, to identify precisely what must change.
+
+---
+
+### Step 2
+
+<p align="center">
+  <img src="Task5/2.png" width="850">
+</p>
+
+**Description**
+Terminal commands list the `RTL` directory, re-view the old `gpio.v`, and run `grep -n "gpio" riscv.v`, printing every existing GPIO-related line in the SoC: the Task-4 exact-address decode, the `gpio_write`/`gpio_read` enables, and the old `GPIO gpio_inst(...)` instantiation.
+
+**Technical Analysis**
+`wire gpio_sel = (mem_addr == 32'h20000000);` is an **exact-match** decode — by definition only able to address one register. This single grep result is what confirms the decode condition itself must change shape to support multiple registers.
+
+**Importance**
+Builds a complete map of every line in `riscv.v` that will need to change, without manually scanning hundreds of lines.
+
+---
+
+### Step 3
+
+<p align="center">
+  <img src="Task5/3.png" width="850">
+</p>
+
+**Description**
+`grep -n "mem_addr" riscv.v` traces every place the core address signal is declared or transformed — from its declaration in `Memory`, through `word_addr`/`mem_wordaddr`, to `isIO` and the existing `gpio_sel`.
+
+**Technical Analysis**
+This reveals the full lifecycle of `mem_addr`: byte address → word address (for RAM) → region-select flags (`isIO`, `gpio_sel`) → (still to be added) an internal register-select field. Understanding this chain is what later justifies passing the *full* address into the GPIO IP rather than a pre-shifted one.
+
+**Importance**
+Prevents computing an address field twice, at the wrong level of the design, which would otherwise silently corrupt register selection.
+
+---
+
+### Step 4
+
+<p align="center">
+  <img src="Task5/4.png" width="850">
+</p>
+
+**Description**
+`grep -n "20000000" riscv.v` and `grep -n "gpio_sel" riscv.v` isolate the exact base-address literal and every consumer of the decode signal (`gpio_write`, `gpio_read`, the `mem_rdata` mux term).
+
+**Technical Analysis**
+`gpio_sel` has exactly three downstream consumers. As long as its *meaning* (the IP is addressed) is preserved, only its right-hand-side expression needs to change — none of its consumers need modification.
+
+**Importance**
+Confirms that widening `gpio_sel` to an address-range comparison will be a safe, localized, drop-in change.
+
+---
+
+### Step 5
+
+<p align="center">
+  <img src="Task5/5.png" width="850">
+</p>
+
+**Description**
+`gedit` (three tabs: `gpio.v`, `riscv.v`, `gpio_test.c`) shows the new multi-register `gpio.v` being written: the port list (`sel`, `we`, `addr`, `wdata`, `rdata`, `gpio_in`, `gpio_out`, `gpio_oe`), two internal registers (`gpio_data_reg`, `gpio_dir_reg`), the offset decoder `reg_sel = addr[3:2]`, the `REG_DATA`/`REG_DIR`/`REG_READ` constants, and the start of synchronous write logic.
+
+**Technical Analysis**
+`reg_sel` is computed **inside** the IP from the full address, rather than being pre-narrowed by the SoC — a scalable pattern, since the SoC-level integration code never has to change again even if more internal registers are added later. Writes only commit when `sel && we` are both asserted, gating the `case(reg_sel)` register-select logic.
+
+**Importance**
+This is the structural foundation of the entire multi-register design — without an internal register-select signal there is no way to tell a write to `GPIO_DATA` apart from a write to `GPIO_DIR`.
+
+---
+
+### Step 6
+
+<p align="center">
+  <img src="Task5/6.png" width="850">
+</p>
+
+**Description**
+The rest of `gpio.v`: the completed write-logic `case`, the combinational read-logic `case` (covering `REG_DATA`/`REG_DIR`/`REG_READ`/`default`), the `GPIO_READ` computation comment block, the `gpio_read_val` assignment, and the final `gpio_out`/`gpio_oe` output assignments.
+
+**Technical Analysis**
+```verilog
+assign gpio_read_val = (gpio_dir_reg & gpio_data_reg) | (~gpio_dir_reg & gpio_in);
+```
+This is a bitwise multiplexer: `gpio_dir_reg` acts as a per-bit select line between the driven value (`gpio_data_reg`) and the real incoming pin value (`gpio_in`). The combinational `always @(*)` block includes an explicit `default`, guaranteeing `rdata` is fully specified for every value of `reg_sel` — the standard way to avoid unintended latch inference.
+
+**Importance**
+Completes the IP's internal logic exactly as required: clean synchronous writes, clean combinational reads, and direction-aware `GPIO_READ` behavior.
+
+---
+
+### Step 7
+
+<p align="center">
+  <img src="Task5/7.png" width="850">
+</p>
+
+**Description**
+`riscv.v` with the new `gpio_inst` instantiation highlighted — replacing the old Task-4 instantiation with one using the **correct port names** matching the new `gpio.v`: `sel`, `we`, `addr`, `wdata`, `rdata`, `gpio_in`, `gpio_out`, `gpio_oe`.
+
+**Technical Analysis**
+```verilog
+gpio gpio_inst (
+    .clk(clk), .resetn(resetn),
+    .sel(gpio_sel), .we(mem_wstrb),
+    .addr(mem_addr), .wdata(mem_wdata), .rdata(gpio_rdata),
+    .gpio_in(gpio_in), .gpio_out(gpio_out), .gpio_oe(gpio_oe)
+);
+```
+`.we(mem_wstrb)` passes the *generic* write-strobe, letting the IP perform its own `sel && we` gating; `.addr(mem_addr)` passes the full, unshifted address so the IP's internal `addr[3:2]` extraction works correctly.
+
+**Importance**
+This is the exact point the new IP becomes electrically connected to the CPU's bus — any port-name or width mismatch here would silently break register access.
+
+---
+
+### Step 8
+
+<p align="center">
+  <img src="Task5/8.png" width="850">
+</p>
+
+**Description**
+The `SOC` module's port list, extended (highlighted) with three new top-level ports: `output [31:0] GPIO_OUT`, `output [31:0] GPIO_OE`, `input [31:0] GPIO_IN`, alongside the existing `RESET`/`LEDS`/`RXD`/`TXD`.
+
+**Technical Analysis**
+This is the SoC's external contract — the set of signals that would be wired to physical FPGA pins in an (optional) hardware-validation step. Declaring `GPIO_OE`/`GPIO_IN` keeps the chip boundary consistent with the IP's new direction/input capability.
+
+**Importance**
+Matches the requirement to expose GPIO signals at the top module, keeping the SoC interface in step with the upgraded IP even though hardware validation itself is optional.
+
+---
+
+### Step 9
+
+<p align="center">
+  <img src="Task5/9.png" width="850">
+</p>
+
+**Description**
+The body of `SOC`, highlighted: the widened address decode, register-offset comments, four new wires (`gpio_rdata`, `gpio_out`, `gpio_oe`, `gpio_in`), the simulation loopback, and the `gpio_write`/`gpio_read` enable wires, followed by the unchanged `Memory RAM(...)` instantiation.
+
+**Technical Analysis**
+```verilog
+wire gpio_sel = (mem_addr[31:4] == 28'h2000000);
+```
+This is the single most important line in the task: comparing only the **upper** address bits turns a single-address match into a 16-byte *page* match, making room for `GPIO_DATA`/`GPIO_DIR`/`GPIO_READ` to all live under one `gpio_sel` signal.
+
+**Importance**
+Without this change, no more than one register could ever be addressed — this line is what makes the entire multi-register design electrically possible.
+
+---
+
+### Step 10
+
+<p align="center">
+  <img src="Task5/10.png" width="850">
+</p>
+
+**Description**
+A clean terminal session lists the updated `RTL` directory and runs `iverilog -DBENCH -o a.out riscv.v`, which returns to the prompt with **no errors or warnings**.
+
+**Technical Analysis**
+A silent, successful compile confirms every named-port connection in the new `gpio_inst` instantiation matches a real port in `gpio.v`, all signal widths are compatible, and the full `` `include `` chain elaborates as one consistent design.
+
+**Importance**
+Structural correctness is a necessary precondition before trusting any functional simulation result — there's no point testing a design that doesn't even elaborate cleanly.
+
+---
+
+### Step 11
+
+<p align="center">
+  <img src="Task5/11.png" width="850">
+</p>
+
+**Description**
+`vvp a.out` runs the simulation and prints nine hex values:
+```
+FFFFFFFF
+12345678
+12345678
+AAAAAAAA
+AAAAAAAA
+0000FFFF
+AAAAAAAA
+00000000
+00000000
+```
+
+**Technical Analysis**
+Each line is one `print_hex()` call in `gpio_test.c`, driven by a real register read through the full chain: C pointer dereference → compiled `lw`/`sw` → CPU bus transaction → SoC address decode → GPIO register logic → read-data mux → UART → console. Every value matches exactly what the firmware wrote or what the direction-aware `GPIO_READ` logic should produce.
+
+**Importance**
+This is the mandatory simulation proof for the task — direct, unambiguous confirmation that address decoding, per-register writes, and direction-aware readback all work correctly together.
+
+---
+
+## GPIO Integration Flow
+
+1. **GPIO peripheral implementation** — designed `gpio.v` with three logical registers (`DATA`, `DIR`, `READ`) instead of one.
+2. **Register interface** — `sel`/`we`/`addr`/`wdata`/`rdata`, with internal `reg_sel = addr[3:2]` decoding which register is targeted.
+3. **Address decoding** — widened `gpio_sel` in `riscv.v` from an exact address match to a page match (`mem_addr[31:4] == 28'h2000000`).
+4. **SoC integration** — re-instantiated `gpio_inst` with corrected port names and the full, unshifted address.
+5. **Memory mapping** — finalized offsets `0x00`/`0x04`/`0x08` → `GPIO_DATA`/`GPIO_DIR`/`GPIO_READ`.
+6. **Software validation** — wrote `gpio_test.c` to configure direction, write two data patterns, change direction mid-test, clear GPIO, and print every readback over UART.
+7. **Simulation** — compiled with `iverilog -DBENCH` and ran with `vvp`, executing the real compiled firmware on the simulated RISC-V core.
+8. **Verification** — confirmed all nine printed values matched the expected register behavior exactly.
+
+---
+
+## Software Validation
+
+**GPIO test program.** `gpio_test.c` defines the three registers as `volatile uint32_t` pointers at fixed offsets from `GPIO_BASE = 0x20000000` — matching the RTL's `gpio_sel` decode exactly. `volatile` ensures the compiler never optimizes away or caches these accesses, guaranteeing every read/write genuinely reaches the hardware.
+
+**Register access.** The program exercises every register and transition: set all pins as outputs, write and verify two different data patterns (`0x12345678`, then `0xAAAAAAAA`), change direction mid-test (`0x0000FFFF`), and finally clear `GPIO_DATA` back to zero — reading `GPIO_DATA` and `GPIO_READ` back after each change.
+
+**UART output.** Every result is reported with `print_hex()`, transmitted over the same UART peripheral already integrated in Task-4 — no new debug infrastructure was needed.
+
+**Expected behavior.** `GPIO_DIR`/`GPIO_DATA` should always read back exactly what was written; `GPIO_READ` should mirror `GPIO_DATA` for output-configured bits (and, in this simulation's loopback setup, for all bits, since `gpio_in = gpio_out`).
+
+---
+
+## Verification Results
+
+The simulation log confirms every expected value, end to end:
+
+| Operation | Expected | Observed |
+|---|---|---|
+| Set `GPIO_DIR = 0xFFFFFFFF`, read back | `FFFFFFFF` | `FFFFFFFF` ✅ |
+| Write `GPIO_DATA = 0x12345678`, read `GPIO_DATA` | `12345678` | `12345678` ✅ |
+| Read `GPIO_READ` | `12345678` | `12345678` ✅ |
+| Write `GPIO_DATA = 0xAAAAAAAA`, read `GPIO_DATA` | `AAAAAAAA` | `AAAAAAAA` ✅ |
+| Read `GPIO_READ` | `AAAAAAAA` | `AAAAAAAA` ✅ |
+| Set `GPIO_DIR = 0x0000FFFF`, read back | `0000FFFF` | `0000FFFF` ✅ |
+| Read `GPIO_READ` (mixed direction, loopback) | `AAAAAAAA` | `AAAAAAAA` ✅ |
+| Clear `GPIO_DATA = 0x0`, read `GPIO_DATA` | `00000000` | `00000000` ✅ |
+| Read `GPIO_READ` | `00000000` | `00000000` ✅ |
+
+This proves: the address decoder correctly isolates the GPIO page; the internal `reg_sel` logic correctly routes each access to the right register without cross-talk; and the combinational `GPIO_READ` logic correctly computes its value from `GPIO_DATA`/`GPIO_DIR`/`gpio_in` in every test condition.
+
+---
+
+## Learning Outcomes
+
+- **GPIO peripheral design** — building a register bank (not just a single register) with clearly defined, independent read/write semantics per register.
+- **Memory-mapped I/O** — reinforcing that a peripheral is reachable through ordinary load/store instructions, with all the real complexity living in the address-decode layer.
+- **SoC integration** — correctly wiring a peripheral's ports to bus-derived signals, including identifying and correcting a real port-naming mismatch encountered during integration.
+- **Hardware-software interaction** — using `volatile` C pointers to guarantee real, observable hardware transactions, and designing a register map that firmware and RTL must both agree on exactly.
+- **Simulation and verification** — proving correctness through full end-to-end simulation of real, compiled firmware running on a simulated RISC-V core, rather than isolated RTL-only tests.
+
+---
+
+## Conclusion
+
+Task-5 successfully extended the single-register Task-4 GPIO peripheral into a realistic, three-register GPIO controller — `GPIO_DATA`, `GPIO_DIR`, and `GPIO_READ` — fully integrated into the RISC-V SoC. The work followed a disciplined process: the existing IP and its integration were reviewed before any new code was written, the address decode was deliberately widened from a single address to a register page, and the SoC-level instantiation was corrected to use accurate port names and an unshifted address signal. The final simulation run is unambiguous proof of success — all nine expected hexadecimal values, covering direction control, two data patterns, a mid-test direction change, and a clear operation, were observed exactly as predicted, confirming that the address decoder, the per-register write logic, and the direction-aware readback logic all function correctly together, driven entirely by real, compiled firmware.
+
+</details>
+
 ## Author
 
 **Name:** Amritanshu Kumar Shandilya
