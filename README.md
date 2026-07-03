@@ -2310,6 +2310,8 @@ Task-5 successfully extended the single-register Task-4 GPIO peripheral into a r
 
 </details>
 
+---
+
 ## Author
 
 **Name:** Amritanshu Kumar Shandilya
