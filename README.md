@@ -7,8 +7,6 @@
 
 ---
 
-# Task List
-
 ## Task 1 - RISC-V Toolchain Setup
 
 * GitHub repository setup
