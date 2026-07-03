@@ -203,7 +203,7 @@ Copying a *working* decode pattern rather than inventing a new one from scratch 
 ## Step 2 : Locating the mem_rdata Multiplexer and Top-Level Instantiation
 
 <p align="center">
-  <img src="Task6/2.png" width="850">
+  <img src="2.png" width="850">
 </p>
 
 ### Description
@@ -220,7 +220,7 @@ Without this step, a naive implementation might have wired the SPI's `rdata` out
 ## Step 3 : Declaring SPI Bus Signals and the Address Decoder in riscv.v
 
 <p align="center">
-  <img src="Task6/3.png" width="850">
+  <img src="3.png" width="850">
 </p>
 
 ### Description
@@ -237,7 +237,7 @@ This step is placed deliberately *before* the module instantiation (Step 4) so t
 ## Step 4 : Instantiating the spi_master Module and Wiring the Bus Interface
 
 <p align="center">
-  <img src="Task6/4.png" width="850">
+  <img src="4.png" width="850">
 </p>
 
 ### Description
@@ -254,7 +254,7 @@ This is the point at which `spi_master.v` stops being a standalone file and beco
 ## Step 5 : Completing the Read-Data Multiplexer and Verifying Clock Infrastructure
 
 <p align="center">
-  <img src="Task6/5.png" width="850">
+  <img src="5.png" width="850">
 </p>
 
 ### Description
@@ -271,7 +271,7 @@ This step closes the loop on bus integration: read, write, and address-decode pa
 ## Step 6 : RTL Simulation, Debug Instrumentation, and First Passing Run
 
 <p align="center">
-  <img src="Task6/6.png" width="850">
+  <img src="6.png" width="850">
 </p>
 
 ### Description
@@ -288,7 +288,7 @@ This is the first point in the project where the *entire* signal chain — CPU i
 ## Step 7 : Opening the Waveform Database in GTKWave
 
 <p align="center">
-  <img src="Task6/7.png" width="850">
+  <img src="7.png" width="850">
 </p>
 
 ### Description
@@ -305,7 +305,7 @@ Simulation output alone (Step 6) proves the *functional* correctness of the desi
 ## Step 8 : Detailed Waveform Analysis of Five Back-to-Back SPI Transfers
 
 <p align="center">
-  <img src="Task6/8.png" width="850">
+  <img src="8.png" width="850">
 </p>
 
 ### Description
@@ -322,7 +322,7 @@ This waveform is the single most important piece of verification evidence in the
 ## Step 9 : FPGA Bitstream Programming via iceprog
 
 <p align="center">
-  <img src="Task6/9.png" width="850">
+  <img src="9.png" width="850">
 </p>
 
 ### Description
@@ -339,7 +339,7 @@ This step is the transition point from "logic that behaves correctly in a simula
 ## Step 10 : Live UART Validation via picocom Serial Terminal
 
 <p align="center">
-  <img src="Task6/10.png" width="850">
+  <img src="10.png" width="850">
 </p>
 
 ### Description
@@ -356,7 +356,7 @@ This is the ultimate sign-off criterion for the entire task. RTL simulation can 
 ## Step 11 : Physical Hardware Bring-Up — Powered VSDSquadron FM Board
 
 <p align="center">
-  <img src="Task6/hw.png" width="850">
+  <img src="hw.png" width="850">
 </p>
 
 ### Description
