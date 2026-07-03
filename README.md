@@ -47,6 +47,15 @@
 * Software validation and simulation
 * Documentation and verification
 
+## Task 6 - SPI Master IP Development
+
+* SPI protocol understanding and IP design
+* RTL implementation of a memory-mapped SPI Master
+* Integration with the RISC-V SoC
+* Firmware development for SPI communication
+* Functional simulation and waveform analysis
+* FPGA hardware validation using the VSDSquadron FM board
+
 ---
 
 <details>
@@ -2284,6 +2293,20 @@ This proves: the address decoder correctly isolates the GPIO page; the internal 
 ## Conclusion
 
 Task-5 successfully extended the single-register Task-4 GPIO peripheral into a realistic, three-register GPIO controller — `GPIO_DATA`, `GPIO_DIR`, and `GPIO_READ` — fully integrated into the RISC-V SoC. The work followed a disciplined process: the existing IP and its integration were reviewed before any new code was written, the address decode was deliberately widened from a single address to a register page, and the SoC-level instantiation was corrected to use accurate port names and an unshifted address signal. The final simulation run is unambiguous proof of success — all nine expected hexadecimal values, covering direction control, two data patterns, a mid-test direction change, and a clear operation, were observed exactly as predicted, confirming that the address decoder, the per-register write logic, and the direction-aware readback logic all function correctly together, driven entirely by real, compiled firmware.
+
+</details>
+
+---
+
+<!-- ========================================================================================================================================================== -->
+
+<details>
+
+<summary><b>Task 6 - SPI Master IP Development</b></summary>
+
+<br>
+
+*Click on this **[Link](Task6/spi_master/README.md)** to explore the complete implementation of the SPI Master IP, including architecture, RTL integration, firmware development, simulation, GTKWave analysis, FPGA hardware validation, and project source files.*
 
 </details>
 
