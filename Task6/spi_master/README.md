@@ -186,7 +186,7 @@ When firmware executes `sw a1, 0(a0)` with `a0 = 0x30000000`, the CPU's bus-inte
 ## Step 1 : Studying the Existing Peripheral Pattern Before Writing New RTL
 
 <p align="center">
-  <img src="Task6/spi_master/1.png" width="850">
+  <img src="1.png" width="850">
 </p>
 
 ### Description
