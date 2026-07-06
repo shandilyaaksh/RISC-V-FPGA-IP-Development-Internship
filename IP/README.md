@@ -45,7 +45,7 @@ spi_master spi_inst (
 // Add spi_sel ? spi_rdata : into your existing mem_rdata mux
 ```
 
-Full wiring instructions, address-decode rules, and pin-constraint guidance: **[`docs/Integration_Guide.md`](SPI_Master/docs/IP_User_Guide.md)**
+Full wiring instructions, address-decode rules, and pin-constraint guidance: **[`Integration_Guide.md`](SPI_Master/docs/IP_User_Guide.md)**
 
 **3. Drive it from firmware**
 
@@ -62,7 +62,7 @@ while (SPI_STATUS & 0x1) {}           // wait for BUSY to clear
 uint8_t rx = SPI_RXDATA & 0xFF;       // received byte
 ```
 
-Complete, ready-to-run firmware: **[`docs/Example_Usage.md`](docs/Example_Usage.md)**
+Complete, ready-to-run firmware: **[`Example_Usage.md`](SPI_Master/docs/Example_Usage.md)**
 
 **4. Test it**
 
@@ -82,10 +82,10 @@ B7
 
 | Document | Purpose |
 |---|---|
-| [`docs/IP_User_Guide.md`](docs/IP_User_Guide.md) | What the IP does, features, limitations, expected behavior — start here |
-| [`docs/Register_Map.md`](docs/Register_Map.md) | Full bit-level register specification |
-| [`docs/Integration_Guide.md`](docs/Integration_Guide.md) | How to wire this IP into your own SoC |
-| [`docs/Example_Usage.md`](docs/Example_Usage.md) | Ready-to-run C firmware and expected output |
+| [`IP_User_Guide.md`](SPI_Master/docs/IP_User_Guide.md) | What the IP does, features, limitations, expected behavior — start here |
+| [`Register_Map.md`](SPI_Master/docs/Register_Map.md) | Full bit-level register specification |
+| [`Integration_Guide.md`](SPI_Master/docs/Integration_Guide.md) | How to wire this IP into your own SoC |
+| [`Example_Usage.md`](SPI_Master/docs/Example_Usage.md) | Ready-to-run C firmware and expected output |
 
 ---
 
@@ -109,4 +109,4 @@ B7
 
 ## Known Limitations
 
-No interrupts, no FIFO, single chip-select, Mode-0 only, 8-bit transfers only. See [`docs/IP_User_Guide.md`](docs/IP_User_Guide.md#6-known-limitations--notes) for the full list and rationale.
+No interrupts, no FIFO, single chip-select, Mode-0 only, 8-bit transfers only. See [`IP_User_Guide.md/limitations`](SPI_Master/docs/IP_User_Guide.md#6-known-limitations--notes) for the full list and rationale.
