@@ -2324,7 +2324,7 @@ Task-5 successfully extended the single-register Task-4 GPIO peripheral into a r
 
 <br>
 
-*Click on this **[Link](IP/README.md)** to explore the complete implementation of the I²C Master IP, including architecture, RTL integration, register documentation, and project source files.*
+*Click on this **[Link](IP/README.md)** to explore the complete implementation of the SPI Master IP, including architecture, RTL integration, register documentation, and project source files.*
 
 </details>
 
