@@ -54,6 +54,12 @@
 * Functional simulation and waveform analysis
 * FPGA hardware validation using the VSDSquadron FM board
 
+## Task 7 - Commercial-Grade IP Documentation & Release
+
+* SPI protocol understanding and IP architecture design
+* RTL implementation of a memory-mapped SPI Master
+* Integration with the RISC-V SoC
+
 ---
 
 <details>
@@ -2305,6 +2311,20 @@ Task-5 successfully extended the single-register Task-4 GPIO peripheral into a r
 <br>
 
 *Click on this **[Link](Task6/spi_master/README.md)** to explore the complete implementation of the SPI Master IP, including architecture, RTL integration, firmware development, simulation, GTKWave analysis, FPGA hardware validation, and project source files.*
+
+</details>
+
+---
+
+<!-- ========================================================================================================================================================== -->
+
+<details>
+
+<summary><b>Task 7 - Commercial-Grade IP Documentation & Release</b></summary>
+
+<br>
+
+*Click on this **[Link](IP/README.md)** to explore the complete implementation of the I²C Master IP, including architecture, RTL integration, register documentation, and project source files.*
 
 </details>
 
