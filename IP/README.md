@@ -45,7 +45,7 @@ spi_master spi_inst (
 // Add spi_sel ? spi_rdata : into your existing mem_rdata mux
 ```
 
-Full wiring instructions, address-decode rules, and pin-constraint guidance: **[`docs/Integration_Guide.md`](docs/Integration_Guide.md)**
+Full wiring instructions, address-decode rules, and pin-constraint guidance: **[`docs/Integration_Guide.md`](IP/SPI_Master/docs/IP_User_Guide.md#6-known-limitations--notes)**
 
 **3. Drive it from firmware**
 
