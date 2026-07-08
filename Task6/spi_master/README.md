@@ -336,37 +336,146 @@ This step is the transition point from "logic that behaves correctly in a simula
 
 ---
 
-## Step 10 : Live UART Validation via picocom Serial Terminal
+## Step 10: Live UART Validation via picocom Serial Terminal
 
 <p align="center">
   <img src="images/10.png" width="850">
 </p>
 
 ### Description
-`sudo make terminal` launches `picocom` at 9600 baud on `/dev/ttyUSB0` (the FTDI's UART endpoint), and the FPGA — now running the freshly-flashed bitstream — prints `000000A50000003C000000FF0000000000000B7` over UART, an exact match to the simulation output captured in Step 6.
 
-### Technical Analysis
-The picocom configuration (`--imap lfcrlf,crcrlf --omap delbs,crlf`, 8 data bits, no parity, 1 stop bit, no flow control) matches the `corescore_emitter_uart` instantiation's parameters carried over unmodified from Task-5 (9600 baud, 12 MHz reference clock), confirming the UART subsystem required zero re-tuning despite the new SPI peripheral being added to the same clock domain and bus. The received byte string being character-for-character identical to the simulation's `$display` output is the definitive end-to-end proof: the same firmware binary, running on real silicon instead of a Verilog simulator, driving real SPI FSM hardware instead of a behavioral model, produces byte-identical results — closing the loop between every earlier verification stage.
+After the SPI Master bitstream was successfully synthesized, flashed, and verified on the VSDSquadron FM board, the UART interface was opened using the command:
 
-### Importance
-This is the ultimate sign-off criterion for the entire task. RTL simulation can be fooled by simulation-only constructs or unconstrained timing that happens to "work" in an event-driven simulator but fails against real clock skew, setup/hold margins, or I/O buffer delays on physical silicon. Seeing the *exact same* byte sequence emerge from the physical board, over a physical USB-UART bridge, is the only evidence that fully retires that risk.
+```bash
+sudo make terminal
+```
+
+This launches **picocom** at **9600 baud** on `/dev/ttyUSB0`, establishing a serial connection with the RISC-V SoC running inside the FPGA.
+
+Immediately after the terminal connected, the processor transmitted the following UART output:
+
+```text
+000000A50000003C000000FF00000000000000B7
+```
+
+This output is generated directly by the firmware (`spi_test.c`) executing on the synthesized RISC-V processor. Each hexadecimal value corresponds to one SPI loopback transaction and is printed using the `print_hex()` routine.
 
 ---
 
-## Step 11 : Physical Hardware Bring-Up — Powered VSDSquadron FM Board
+### UART Output Analysis
+
+The continuous UART stream can be divided into five individual 32-bit hexadecimal values.
+
+| Transfer | TX Byte | RX Byte | UART Output | Result |
+|----------:|:-------:|:-------:|:-----------:|:------:|
+| 1 | **0xA5** | **0xA5** | `000000A5` |  Pass |
+| 2 | **0x3C** | **0x3C** | `0000003C` |  Pass |
+| 3 | **0xFF** | **0xFF** | `000000FF` |  Pass |
+| 4 | **0x00** | **0x00** | `00000000` |  Pass |
+| 5 | **0xB7** | **0xB7** | `000000B7` |  Pass |
+
+Since the SPI Master was tested in **loopback mode (MISO connected internally to MOSI)**, the received byte exactly matches the transmitted byte for every transfer.
+
+The values appear on a single line because the `print_hex()` routine prints hexadecimal characters without appending newline characters. This behavior is identical to the earlier RTL simulation and is therefore expected.
+
+---
+
+### UART Configuration
+
+The hardware validation used the following UART configuration:
+
+- **Baud Rate:** 9600 bps
+- **Data Bits:** 8
+- **Parity:** None
+- **Stop Bits:** 1
+- **Flow Control:** Disabled
+
+These settings match the parameters used by the existing `corescore_emitter_uart` module operating from the **12 MHz system clock**.
+
+Since the UART peripheral remained unchanged throughout the project, successful communication also confirms that integrating the SPI Master did not disturb any existing SoC peripherals or memory-mapped bus functionality.
+
+---
+
+### Importance
+
+This UART capture represents the complete end-to-end validation of the SPI Master IP.
+
+It demonstrates that:
+
+- The RTL synthesizes successfully.
+- The SPI peripheral integrates correctly with the RISC-V processor.
+- The firmware communicates with the peripheral through memory-mapped registers.
+- The synthesized design executes correctly on real hardware.
+- The UART subsystem remains fully operational after SPI integration.
+- Hardware results exactly match RTL simulation results.
+
+This establishes successful verification across the complete FPGA development flow, from RTL implementation to live silicon execution.
+
+---
+
+# Step 11: Physical Hardware Bring-Up — VSDSquadron FM Board
 
 <p align="center">
-  <img src="images/hw.png" width="850">
+  <img src="images/hw.png" width="500">
 </p>
 
 ### Description
-A photograph of the VSDSquadron FM board itself, powered via USB-C, showing the red PWR LED illuminated, an additional red status LED active near the FTDI chip, and a blue/white LED lit near the iCE40UP5K — captured at the point the board was actively running the programmed SPI-integrated bitstream and streaming UART data to the host terminal shown in Step 10.
 
-### Technical Analysis
-The board layout visible here — the FT232HL FTDI USB-UART bridge, the Winbond SPI flash (the same flash referenced by its JEDEC ID in Step 9), the ICE40UP5K FPGA fabric itself, and the 12 MHz crystal that ultimately feeds the `SB_HFOSC`-derived clock discussed in Step 5 — is the complete physical realization of every block described abstractly in the System Architecture diagram. The illuminated LEDs are a coarse but meaningful sanity signal: PWR confirms USB-C bus power and the board's onboard regulator are healthy, the FTDI-adjacent LED reflects active USB-UART traffic (correlating directly with the picocom session in Step 10), and the LED near the FPGA die reflects the bitstream's configuration-done (`CDONE`) status going high, matching the `cdone: high` message logged by iceprog in Step 9.
+The image above shows the **VSDSquadron FM FPGA development board** powered through USB-C while executing the SPI-integrated RISC-V SoC.
 
-### Importance
-While not a substitute for the waveform or UART evidence gathered in earlier steps, this photograph closes the documentation loop by grounding the entire exercise in physical reality: a specific, photographable piece of hardware, running a specific bitstream, that can be independently re-verified by anyone with access to the same board — the final artifact of an internship task whose deliverable is not just working RTL, but a fully reproducible hardware bring-up.
+At the moment this photograph was taken, the board had already booted from flash and produced the UART output presented in **Step 10**.
+
+---
+
+### Board Status Interpretation
+
+Several indicator LEDs are visible on the board.
+
+| LED | Location | State | Meaning |
+|------|----------|-------|---------|
+| **Power LED** | Near USB-C connector | ON | USB power present and onboard regulators active |
+| **FTDI Activity LED** | Near FT232H interface | ON | USB communication with the host computer is active |
+| **Configuration (CDONE) LED** | Near FPGA | ON | FPGA configuration completed successfully |
+
+The **CDONE** indicator is particularly important.
+
+During power-up, the iCE40UP5K automatically reads the configuration bitstream stored inside the onboard Winbond SPI Flash.
+
+Only after the complete bitstream has been successfully loaded does the FPGA assert **CDONE HIGH**.
+
+Therefore, the illuminated configuration LED confirms that:
+
+- Bitstream programming succeeded.
+- Flash memory contents are valid.
+- FPGA configuration completed correctly.
+- The RISC-V processor and SPI Master IP are actively executing.
+
+---
+
+### Hardware Components Used
+
+| Component | Device | Purpose |
+|-----------|--------|---------|
+| **FPGA** | Lattice iCE40UP5K | Executes the RISC-V processor, SPI Master IP, and UART subsystem |
+| **USB Interface** | FTDI FT232H | Transfers UART data between FPGA and host PC |
+| **Configuration Flash** | Winbond W25Q32JV | Stores FPGA configuration bitstream |
+| **System Clock** | 12 MHz Crystal Oscillator | Provides the reference clock for the complete SoC |
+| **USB-C Connector** | USB Interface | Supplies power and host communication |
+
+---
+
+### Significance
+
+This hardware demonstration provides the final validation stage of the project.
+
+The successful board bring-up confirms that:
+
+- The SPI Master IP operates correctly on physical FPGA hardware.
+- The synthesized design functions exactly as verified during RTL simulation.
+- The processor successfully accesses the SPI peripheral through the memory-mapped interface.
+- Firmware executes without modification on real hardware.
+- UART communication reliably reports transaction results.
+- The FPGA automatically boots from onboard flash memory.
 
 ---
 
