@@ -336,84 +336,7 @@ This step is the transition point from "logic that behaves correctly in a simula
 
 ---
 
-## Step 10: Live UART Validation via picocom Serial Terminal
-
-<p align="center">
-  <img src="images/10.png" width="850">
-</p>
-
-### Description
-
-After the SPI Master bitstream was successfully synthesized, flashed, and verified on the VSDSquadron FM board, the UART interface was opened using the command:
-
-```bash
-sudo make terminal
-```
-
-This launches **picocom** at **9600 baud** on `/dev/ttyUSB0`, establishing a serial connection with the RISC-V SoC running inside the FPGA.
-
-Immediately after the terminal connected, the processor transmitted the following UART output:
-
-```text
-000000A50000003C000000FF00000000000000B7
-```
-
-This output is generated directly by the firmware (`spi_test.c`) executing on the synthesized RISC-V processor. Each hexadecimal value corresponds to one SPI loopback transaction and is printed using the `print_hex()` routine.
-
----
-
-### UART Output Analysis
-
-The continuous UART stream can be divided into five individual 32-bit hexadecimal values.
-
-| Transfer | TX Byte | RX Byte | UART Output | Result |
-|----------:|:-------:|:-------:|:-----------:|:------:|
-| 1 | **0xA5** | **0xA5** | `000000A5` |  Pass |
-| 2 | **0x3C** | **0x3C** | `0000003C` |  Pass |
-| 3 | **0xFF** | **0xFF** | `000000FF` |  Pass |
-| 4 | **0x00** | **0x00** | `00000000` |  Pass |
-| 5 | **0xB7** | **0xB7** | `000000B7` |  Pass |
-
-Since the SPI Master was tested in **loopback mode (MISO connected internally to MOSI)**, the received byte exactly matches the transmitted byte for every transfer.
-
-The values appear on a single line because the `print_hex()` routine prints hexadecimal characters without appending newline characters. This behavior is identical to the earlier RTL simulation and is therefore expected.
-
----
-
-### UART Configuration
-
-The hardware validation used the following UART configuration:
-
-- **Baud Rate:** 9600 bps
-- **Data Bits:** 8
-- **Parity:** None
-- **Stop Bits:** 1
-- **Flow Control:** Disabled
-
-These settings match the parameters used by the existing `corescore_emitter_uart` module operating from the **12 MHz system clock**.
-
-Since the UART peripheral remained unchanged throughout the project, successful communication also confirms that integrating the SPI Master did not disturb any existing SoC peripherals or memory-mapped bus functionality.
-
----
-
-### Importance
-
-This UART capture represents the complete end-to-end validation of the SPI Master IP.
-
-It demonstrates that:
-
-- The RTL synthesizes successfully.
-- The SPI peripheral integrates correctly with the RISC-V processor.
-- The firmware communicates with the peripheral through memory-mapped registers.
-- The synthesized design executes correctly on real hardware.
-- The UART subsystem remains fully operational after SPI integration.
-- Hardware results exactly match RTL simulation results.
-
-This establishes successful verification across the complete FPGA development flow, from RTL implementation to live silicon execution.
-
----
-
-# Step 11: Physical Hardware Bring-Up — VSDSquadron FM Board
+# Step 10: Physical Hardware Bring-Up — VSDSquadron FM Board
 
 <p align="center">
   <img src="images/hw.png" width="500">
@@ -422,8 +345,6 @@ This establishes successful verification across the complete FPGA development fl
 ### Description
 
 The image above shows the **VSDSquadron FM FPGA development board** powered through USB-C while executing the SPI-integrated RISC-V SoC.
-
-At the moment this photograph was taken, the board had already booted from flash and produced the UART output presented in **Step 10**.
 
 ---
 
@@ -461,21 +382,6 @@ Therefore, the illuminated configuration LED confirms that:
 | **Configuration Flash** | Winbond W25Q32JV | Stores FPGA configuration bitstream |
 | **System Clock** | 12 MHz Crystal Oscillator | Provides the reference clock for the complete SoC |
 | **USB-C Connector** | USB Interface | Supplies power and host communication |
-
----
-
-### Significance
-
-This hardware demonstration provides the final validation stage of the project.
-
-The successful board bring-up confirms that:
-
-- The SPI Master IP operates correctly on physical FPGA hardware.
-- The synthesized design functions exactly as verified during RTL simulation.
-- The processor successfully accesses the SPI peripheral through the memory-mapped interface.
-- Firmware executes without modification on real hardware.
-- UART communication reliably reports transaction results.
-- The FPGA automatically boots from onboard flash memory.
 
 ---
 
