@@ -542,7 +542,11 @@ Because the loopback connection is entirely internal, timing closure for the SPI
 
 # Hardware Validation
 
-Hardware validation combined three independent checks, each already detailed above: the `iceprog` `VERIFY OK` (Step 9) confirming the bitstream itself was written correctly; the live `picocom` UART session (Step 10) confirming the *running* design produces byte-identical output to simulation; and the physical LED/power state (Step 11) confirming the board's configuration-done and USB-UART activity indicators match expected behavior. The reset button (visible on the physical board photograph) provides a manual re-run path — pressing it re-triggers the FPGA's internal reset sequence, causing firmware to re-execute from its entry point and re-issue all five SPI transfers, which was used repeatedly during bring-up to confirm the result was reproducible rather than a one-off fluke. **Hardware validation was successfully completed on the VSDSquadron FM FPGA board**, with the UART output matching simulation exactly across multiple independent reset-and-rerun cycles.
+Hardware validation was completed through three complementary verification stages. First, `iceprog` reported **VERIFY OK**, confirming that the generated bitstream was successfully programmed into the onboard Winbond SPI Flash and verified without errors. Second, live UART validation was performed using a **CH340 USB-to-UART converter**, where the FPGA transmitted the SPI loopback results over its UART TX pin. The captured output matched the simulation results exactly, demonstrating that the firmware, SPI Master IP, and RISC-V SoC behaved identically on real hardware. Finally, the physical state of the VSDSquadron FM board—including the power indicator, configuration (CDONE) LED, and UART activity during transmission—confirmed that the FPGA had been configured successfully and was executing the programmed design.
+
+During bring-up, the **RESET** push-button on the VSDSquadron FM board was used to repeatedly restart the processor. Each reset caused the RISC-V core to boot from the programmed bitstream, execute the SPI firmware, perform all five SPI transactions, and transmit the same hexadecimal values over UART. The output remained identical across multiple reset cycles, confirming repeatable and deterministic hardware behaviour.
+
+**Hardware validation was successfully completed on the VSDSquadron FM FPGA board using a CH340 USB-to-UART interface, with the observed UART output matching the functional simulation results across repeated hardware executions.**
 
 ---
 
@@ -550,13 +554,13 @@ Hardware validation combined three independent checks, each already detailed abo
 
 | Stage | Method | Expected Result | Observed Result | Status |
 |---|---|---|---|---|
-| RTL Simulation | `iverilog` + `vvp` | Bytes A5, 3C, FF, 00, B7 on UART | Matched exactly | ✅ Pass |
-| Waveform (GTKWave) | `spi_wave.vcd` inspection | Mode-0 timing, `tx_shift`==`rx_shift` per transfer | Confirmed across 5 transfers | ✅ Pass |
-| Firmware | `spi_test.c` polling loop | BUSY clears, DONE sets, RXDATA valid | Confirmed via trace and waveform | ✅ Pass |
-| FPGA Synthesis | Yosys + nextpnr + icepack | Clean bitstream, timing met | `SOC.bin`, 104,090 bytes generated | ✅ Pass |
-| Hardware Programming | `iceprog SOC.bin` | `VERIFY OK` | `VERIFY OK` | ✅ Pass |
-| UART (Hardware) | `picocom` @ 9600 baud | Bytes A5, 3C, FF, 00, B7 | Matched simulation exactly | ✅ Pass |
-| Hardware Bring-Up | Visual/physical inspection | PWR/CDONE/UART-activity LEDs active | Confirmed on VSDSquadron FM | ✅ Pass |
+| RTL Simulation | `iverilog` + `vvp` | Bytes A5, 3C, FF, 00, B7 on UART | Matched exactly | Pass |
+| Waveform (GTKWave) | `spi_wave.vcd` inspection | Mode-0 timing, `tx_shift`==`rx_shift` per transfer | Confirmed across 5 transfers | Pass |
+| Firmware | `spi_test.c` polling loop | BUSY clears, DONE sets, RXDATA valid | Confirmed via trace and waveform | Pass |
+| FPGA Synthesis | Yosys + nextpnr + icepack | Clean bitstream, timing met | `SOC.bin`, 104,090 bytes generated | Pass |
+| Hardware Programming | `iceprog SOC.bin` | `VERIFY OK` | `VERIFY OK` | Pass |
+| UART (Hardware) | `picocom` @ 9600 baud | Bytes A5, 3C, FF, 00, B7 | Matched simulation exactly | Pass |
+| Hardware Bring-Up | Visual/physical inspection | PWR/CDONE/UART-activity LEDs active | Confirmed on VSDSquadron FM | Pass |
 
 ---
 
