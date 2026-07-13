@@ -336,92 +336,136 @@ This step is the transition point from "logic that behaves correctly in a simula
 
 ---
 
-# Step 10: Physical Hardware Bring-Up — VSDSquadron FM Board
+## Step 10: Physical Hardware Validation Using External CH340 USB-to-UART Converter
 
 <p align="center">
-  <img src="images/hw.png" width="500">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="images/hw.png" width="420">
+      </td>
+      <td align="center">
+        <img src="images/10t.png" width="420">
+      </td>
+    </tr>
+  </table>
 </p>
 
-### Description
+## Description
 
-The image above shows the **VSDSquadron FM FPGA development board** powered through USB-C while executing the SPI-integrated RISC-V SoC.
+The images above shows the **VSDSquadron FM FPGA development board** successfully running the SPI-integrated RISC-V SoC while communicating with a host computer through an **external CH340 USB-to-UART converter**.
 
----
+Unlike the earlier bring-up using the onboard FT232H interface, this validation routes the FPGA UART signals through external GPIO pins into a CH340 serial adapter. This demonstrates that the synthesized design is capable of driving a real external peripheral and that the UART pins, pin constraints, and board-level wiring are functioning correctly.
 
-### Board Status Interpretation
-
-Several indicator LEDs are visible on the board.
-
-| LED | Location | State | Meaning |
-|------|----------|-------|---------|
-| **Power LED** | Near USB-C connector | ON | USB power present and onboard regulators active |
-| **FTDI Activity LED** | Near FT232H interface | ON | USB communication with the host computer is active |
-| **Configuration (CDONE) LED** | Near FPGA | ON | FPGA configuration completed successfully |
-
-The **CDONE** indicator is particularly important.
-
-During power-up, the iCE40UP5K automatically reads the configuration bitstream stored inside the onboard Winbond SPI Flash.
-
-Only after the complete bitstream has been successfully loaded does the FPGA assert **CDONE HIGH**.
-
-Therefore, the illuminated configuration LED confirms that:
-
-- Bitstream programming succeeded.
-- Flash memory contents are valid.
-- FPGA configuration completed correctly.
-- The RISC-V processor and SPI Master IP are actively executing.
+The UART data captured through the CH340 interface matches the simulation results exactly, completing the final stage of hardware verification.
 
 ---
 
-### Hardware Components Used
+## Hardware Connections
+
+The UART interface was connected as follows:
+
+| VSDSquadron FM | CH340 USB-UART |
+|---------------|----------------|
+| **TXD** | **RXD** |
+| **GND** | **GND** |
+
+The FPGA transmits UART data through its TX pin, which is received by the CH340 module and forwarded to the host computer as a USB serial device.
+
+---
+
+## Board Status Interpretation
+
+Several indicators visible in the photograph confirm correct hardware operation.
+
+| Component | State | Meaning |
+|-----------|-------|---------|
+| **VSDSquadron FM Power LED** | ON | USB power successfully applied |
+| **Configuration (CDONE) LED** | ON | FPGA configuration completed successfully |
+| **CH340 Power LED** | ON | USB-to-UART converter powered and operational |
+| **CH340 Activity LED** | Blinking during transmission | Active UART communication between FPGA and host PC |
+
+The illuminated **CDONE** LED indicates that the iCE40UP5K successfully loaded its configuration bitstream from the onboard Winbond SPI Flash during power-up.
+
+Only after successful configuration does the FPGA assert **CDONE HIGH**, confirming that:
+
+- FPGA programming completed successfully.
+- Configuration flash contents are valid.
+- The synthesized RISC-V SoC is executing.
+- The SPI Master IP is active inside the FPGA fabric.
+
+---
+
+## Hardware Components Used
 
 | Component | Device | Purpose |
 |-----------|--------|---------|
-| **FPGA** | Lattice iCE40UP5K | Executes the RISC-V processor, SPI Master IP, and UART subsystem |
-| **USB Interface** | FTDI FT232H | Transfers UART data between FPGA and host PC |
-| **Configuration Flash** | Winbond W25Q32JV | Stores FPGA configuration bitstream |
+| **FPGA** | Lattice iCE40UP5K | Executes the RISC-V processor, SPI Master IP, UART subsystem, and memory bus |
+| **External USB-UART** | CH340 | Converts FPGA UART signals into a USB serial interface for the host PC |
+| **Configuration Flash** | Winbond W25Q32JV | Stores the FPGA configuration bitstream |
 | **System Clock** | 12 MHz Crystal Oscillator | Provides the reference clock for the complete SoC |
-| **USB-C Connector** | USB Interface | Supplies power and host communication |
+| **USB-C Connector** | USB Interface | Powers the VSDSquadron FM board |
+| **Jumper Wires** | TX, RX, GND | Connect FPGA UART pins to the external CH340 module |
 
 ---
 
-# SPI RTL Architecture
+## UART Validation
 
-`spi_master.v` is built around a compact five-state FSM, two shift registers, a free-running clock divider, and the four bus-facing registers already described in the Register Map section.
+After programming the FPGA, a serial terminal was opened on the CH340 serial port at **9600 baud**.
 
-## Finite State Machine
+The firmware running on the RISC-V processor produced the following output:
 
-```
-        EN & !busy
-   +-----------------------------+
-   |                             v
-IDLE -------START--------> LOAD ---> SHIFT (x8 bit iterations) ---> DONE ---> IDLE
-   ^                                                                   |
-   +-------------------------------------------------------------------+
+```text
+000000A50000003C000000FF00000000000000B7
 ```
 
-- **IDLE** — `cs_n` held high (inactive), `sclk` held low (Mode-0 idle level), FSM waits for `CTRL.EN & CTRL.START`.
-- **LOAD** — `tx_shift <= TXDATA`, `cs_n` asserted low, `bit_cnt` reset to 0, `clk_cnt` reset — a single dedicated cycle to guarantee CS_n's setup time relative to the first SCLK edge, rather than asserting CS_n and starting SCLK in the same cycle.
-- **SHIFT** — the active state observed as `state=1` throughout the Step 6/8 traces; on each rising SCLK edge, `rx_shift` captures `miso`, and on each falling SCLK edge, `tx_shift` shifts left and drives the next bit onto `mosi`. `bit_cnt` increments once per full SCLK cycle.
-- **DONE** — entered once `bit_cnt` reaches 8; `RXDATA <= rx_shift`, `STATUS.DONE` set, `cs_n` de-asserted, held for one cycle before returning to IDLE.
+Each hexadecimal value corresponds to one SPI transaction executed by the firmware.
 
-## Shift Registers
+| Transfer | TX Byte | RX Byte | Result |
+|----------:|:------:|:------:|:------:|
+| 1 | 0xA5 | 0xA5 | Pass |
+| 2 | 0x3C | 0x3C | Pass |
+| 3 | 0xFF | 0xFF | Pass |
+| 4 | 0x00 | 0x00 | Pass |
+| 5 | 0xB7 | 0xB7 | Pass |
 
-`tx_shift[7:0]` and `rx_shift[7:0]` are independent 8-bit shift registers rather than a single shared register, because full-duplex operation requires simultaneously reading from one and writing to the other on the same edge — sharing a register would corrupt in-flight transmit data with incoming receive data mid-shift.
-
-## Clock Divider
-
-The SoC's system clock (12 MHz, from `SB_HFOSC`) is far faster than a typical SPI SCLK needs to be for this exercise, so an internal `clk_cnt[7:0]` free-running divider (directly observed in Step 8's waveform) toggles an internal SCLK-enable pulse once every N system clocks, producing a slower, evenly-spaced SCLK suitable for reliable sampling margins. Keeping the divider counter running continuously (rather than resetting it every transaction) was a deliberate choice to guarantee the first SCLK pulse of every transfer has the same width as every subsequent pulse — a reset-on-every-transaction divider risks producing a truncated first half-cycle.
-
-## Busy / Done Flags
-
-`status_busy` is simply `(state != IDLE)`, and `status_done` is a one-cycle pulse (or sticky-until-next-START flag) set when the FSM transitions `SHIFT → DONE`. Keeping these as combinational/registered outputs derived directly from FSM state — rather than independent counters — guarantees they can never desynchronize from the actual FSM behavior.
-
-## Chip Select
-
-`cs_n` is registered, not combinational, and is asserted one full cycle before the first SCLK toggle (during LOAD) and de-asserted one cycle after the last data bit is sampled (during DONE) — satisfying typical SPI slave setup/hold requirements with clean cycle-aligned margins rather than relying on combinational glue that could glitch.
+The received data exactly matches the transmitted data because the SPI Master was verified in loopback mode.
 
 ---
+
+## Why Use an External CH340?
+
+Using an external CH340 converter provides stronger hardware validation than relying solely on the onboard USB interface.
+
+It confirms that:
+
+- the FPGA UART TX pin is correctly routed to the board headers,
+- the PCF pin assignments are correct,
+- the synthesized design drives real external GPIO pins,
+- the UART electrical interface operates correctly,
+- external hardware can communicate successfully with the FPGA.
+
+This validates not only the internal SPI Master IP but also the complete board-level hardware interface.
+
+---
+
+## Importance
+
+This hardware demonstration represents the final verification stage of the SPI Master IP.
+
+The project has now been validated across every level of the FPGA design flow:
+
+- RTL design
+- Functional simulation
+- Waveform verification
+- Firmware execution
+- Synthesis and place-and-route
+- Flash programming
+- FPGA configuration
+- External UART communication using a CH340 USB-to-UART converter
+- Successful execution on physical iCE40UP5K hardware
+
+The matching UART output confirms that the same firmware verified during simulation executes correctly on real hardware, completing the end-to-end validation of the SPI Master IP.
 
 # SoC Integration
 
