@@ -342,10 +342,10 @@ This step is the transition point from "logic that behaves correctly in a simula
   <table>
     <tr>
       <td align="center">
-        <img src="images/hw.png" width="420">
+        <img src="images/hwv.png" width="420">
       </td>
       <td align="center">
-        <img src="images/10t.png" width="420">
+        <img src="images/10.png" width="420">
       </td>
     </tr>
   </table>
@@ -361,38 +361,54 @@ The UART data captured through the CH340 interface matches the simulation result
 
 ---
 
+## FPGA Pin Constraints (PCF Configuration)
+
+The VSDSquadron FM board uses a **Physical Constraints File (PCF)** to map logical Verilog signals to the physical pins of the Lattice iCE40UP5K FPGA. During hardware validation, the default board constraints were extended to expose the SPI Master interface on unused GPIO pins while preserving the existing UART, clock, reset, and LED functionality.
+
+### PCF Constraints
+
+```pcf
+set_io LEDS[0] 39
+set_io LEDS[1] 41
+set_io LEDS[2] 40
+set_io LEDS[3] 25
+set_io LEDS[4] 26
+
+set_io RESET 23
+set_io CLK   28
+
+set_io TXD   4
+set_io RXD   3
+
+# SPI Master Interface
+set_io SPI_SCLK 27
+set_io SPI_MOSI 10
+set_io SPI_MISO 12
+set_io SPI_CS_N 21
+```
+
+---
+
 ## Hardware Connections
 
-The UART interface was connected as follows:
+The hardware validation setup consisted of two separate connections: an external **CH340 USB-to-UART converter** for UART communication and a physical **SPI loopback** between the MOSI and MISO pins.
+
+### UART Connection
 
 | VSDSquadron FM | CH340 USB-UART |
 |---------------|----------------|
 | **TXD** | **RXD** |
 | **GND** | **GND** |
 
-The FPGA transmits UART data through its TX pin, which is received by the CH340 module and forwarded to the host computer as a USB serial device.
+The FPGA transmits UART data through its **TXD** pin, which is received by the CH340 module and forwarded to the host computer as a USB serial device for monitoring through `picocom`.
 
----
+### SPI Loopback Connection
 
-## Board Status Interpretation
+| VSDSquadron FM | Connection |
+|---------------|------------|
+| **SPI_MOSI (Pin 10)** | **SPI_MISO (Pin 12)** |
 
-Several indicators visible in the photograph confirm correct hardware operation.
-
-| Component | State | Meaning |
-|-----------|-------|---------|
-| **VSDSquadron FM Power LED** | ON | USB power successfully applied |
-| **Configuration (CDONE) LED** | ON | FPGA configuration completed successfully |
-| **CH340 Power LED** | ON | USB-to-UART converter powered and operational |
-| **CH340 Activity LED** | Blinking during transmission | Active UART communication between FPGA and host PC |
-
-The illuminated **CDONE** LED indicates that the iCE40UP5K successfully loaded its configuration bitstream from the onboard Winbond SPI Flash during power-up.
-
-Only after successful configuration does the FPGA assert **CDONE HIGH**, confirming that:
-
-- FPGA programming completed successfully.
-- Configuration flash contents are valid.
-- The synthesized RISC-V SoC is executing.
-- The SPI Master IP is active inside the FPGA fabric.
+A jumper wire was used to directly connect **SPI_MOSI** to **SPI_MISO**, creating a hardware loopback path. During each SPI transfer, every transmitted byte on MOSI was immediately fed back into the MISO input, allowing the SPI Master IP to verify correct transmission and reception entirely in hardware without requiring an external SPI slave device.
 
 ---
 
