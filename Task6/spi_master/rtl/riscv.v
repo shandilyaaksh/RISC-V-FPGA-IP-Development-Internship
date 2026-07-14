@@ -265,7 +265,13 @@ module SOC (
     input            RESET,
     output reg [4:0] LEDS,
     input            RXD,
-    output           TXD
+    output           TXD,
+
+    // SPI Master External Interface
+    output           SPI_SCLK,
+    output           SPI_MOSI,
+    input            SPI_MISO,
+    output           SPI_CS_N
 );
 
    wire clk;
@@ -279,7 +285,7 @@ module SOC (
 
    Processor CPU(
       .clk(clk),
-      .resetn(resetn),           
+      .resetn(resetn),
       .mem_addr(mem_addr),
       .mem_rdata(mem_rdata),
       .mem_rstrb(mem_rstrb),
@@ -301,9 +307,13 @@ module SOC (
    wire        spi_sclk_w;
    wire        spi_mosi_w;
    wire        spi_cs_n_w;
+   wire        spi_miso_w;
+   
+   assign SPI_SCLK = spi_sclk_w;
+   assign SPI_MOSI = spi_mosi_w;
+   assign spi_miso_w = SPI_MISO;
+   assign SPI_CS_N = spi_cs_n_w;
 
-   // Loopback: MISO = MOSI for simulation verification
-   wire spi_miso_w = spi_mosi_w;
    
    Memory RAM(
       .clk(clk),
